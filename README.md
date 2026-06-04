@@ -82,6 +82,20 @@ board's documented sysclk_p/sysclk_n, CPU_RESET, and GPIO_LED_0..7.
 - **Different chip?**  Override `CHIPDB_URL` / `PART` / `CHIPDB_TAG`
   in your environment or edit the top-level Makefile.
 - **Newer toolchain?**  `git submodule update --remote` then rebuild.
+- **Want to push to one of the submodules?**  All remotes are
+  HTTPS-by-default so anonymous clones work without an SSH key.  If
+  you have push rights to one of the upstreams, add an
+  `insteadOf` rewrite to your **global** git config — it transparently
+  swaps the URL on `git fetch` / `git push` without you having to
+  touch the wrapper repo or its `.gitmodules`.  Example:
+  ```bash
+  git config --global \
+    url."git@github.com:openXC7/".insteadOf "https://github.com/openXC7/"
+  git config --global \
+    url."git@github.com:jrrk2/".insteadOf "https://github.com/jrrk2/"
+  ```
+  Anyone else's clone continues to use HTTPS; only your local
+  fetches/pushes get the rewrite.
 
 ## Provenance / contact
 
