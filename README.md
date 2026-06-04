@@ -71,8 +71,75 @@ board's documented sysclk_p/sysclk_n, CPU_RESET, and GPIO_LED_0..7.
 | OS | Status |
 |---|---|
 | Linux (Ubuntu 24.04, Debian 12) | Primary, fully tested |
-| macOS (Sequoia 15+ with Homebrew) | Secondary, validated on the cdc10134 commit branch |
+| macOS (Sequoia 15+ with Homebrew) | Secondary; builds a working bit, but **not** bit-identical to Linux — see [Limitations](#limitations-and-caveats) |
 | Windows | Planned, not yet supported |
+
+## Limitations and caveats
+
+This is a **demonstration** that a fully open-source Virtex-7 flow can take
+SystemVerilog all the way to a working bitstream — not a production-hardened
+toolchain. The flow is real and the bit genuinely runs on hardware, but there
+are sharp edges worth understanding before you build your own designs on it.
+
+### The build can silently produce a non-working bitstream
+Two environment flags in the place-and-route / FASM steps trade correctness
+guarantees for "always emit an output":
+
+- **`NEXTPNR_SKIP_FAILED_ARCS=1`** — if `router1` can't route a net within its
+  visit budget it *drops the connection* instead of failing. High-fanout
+  constant nets (`$PACKER_VCC_NET`) are the usual casualties on congested
+  placements.
+- **`XRAY_ALLOW_MISSING_FEATURES=1`** — if a FASM feature isn't in the prjxray
+  database, `fasm2frames` *omits those bits* instead of erroring (see DB gaps
+  below).
+
+Both convert "I can't do this correctly" into "emit a bitstream with missing
+bits." The board can program successfully (`DONE` goes high) yet not function.
+If you adapt this flow for real work, consider turning these off so failures
+are loud rather than silent.
+
+### Results are placement-sensitive
+Because of the above, whether a design builds *correctly* can depend on the
+placement nextpnr happens to land on — a more congested placement can tip
+`router1` over its congestion cliff and start dropping arcs. The demo is small
+enough to route cleanly, but the headroom is limited. For anything larger,
+switching to `--router router2` (negotiated-congestion) is the recommended
+path and is far more robust with high-fanout const nets.
+
+### Cross-platform reproducibility is only partial
+The analytic placer was made deterministic and identical across C++ standard
+libraries (nextpnr commit `1863fa0e`: shuffle with `std::mt19937` over a
+name-sorted bel-type order, replacing the implementation-defined
+`std::default_random_engine` that made libstdc++ and libc++ diverge). However,
+the placer's *parallel Eigen floating-point solve* still depends on thread
+count and CPU architecture. **Linux (x86) and macOS (especially Apple Silicon)
+therefore produce working but not bit-identical bitstreams.** For bit-exact
+reproducibility across machines, force the placer single-threaded
+(`OMP_NUM_THREADS=1`, or `Eigen::setNbThreads(1)` in the placer).
+
+### The device database has gaps
+The prjxray Virtex-7 database does not document every tile feature. Notably the
+left-edge I/O (`LIOI`) OLOGIC/ILOGIC route-thru segbits are missing, so every
+build emits ~27 `… not found` warnings whose bits are silently dropped —
+tolerated here only because they happen to be benign for this design's
+clocking. A design that genuinely relied on those resources would
+mis-configure.
+
+### Narrow validation surface
+- **One device:** `xc7vx485tffg1761-2` only. Other Virtex-7 parts need a
+  different chipdb + prjxray DB and are untested.
+- **One board:** the Xilinx VC707. `top.xdc` pin constraints are board-specific.
+- **One design class:** a single-clock LED counter. No multi-clock domains,
+  MMCM/PLL, SERDES, high-speed I/O, or external memory have been exercised.
+- **Timing:** the validated build passes at 200 MHz, but a residual
+  silicon-level rate glitch on V7 OLOGIC pads (noted in the design comments)
+  is not fully characterised.
+
+### Prebuilt chipdb
+The chip database is downloaded as a release asset, not regenerated from
+RapidWright DeviceResources in-tree. This keeps the build pure-OSS and fast,
+but you are trusting the published artifact rather than reproducing it from
+source.
 
 ## Customising / extending
 
