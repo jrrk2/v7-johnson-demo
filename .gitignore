@@ -1,0 +1,22 @@
+# Build artefacts produced by the top-level Makefile.
+build/
+deps/.initialised
+
+# Per-tool build dirs (each cloned dep has its own gitignore but we
+# don't want anything inadvertently committed at the wrapper level).
+deps/*/build/
+deps/*/_build/
+deps/*/env/
+
+# Demo intermediates (.bit is the only thing worth carrying out,
+# everything else is rebuildable from sources).
+johnson/top.json
+johnson/top.edif
+johnson/counter28.fasm
+johnson/counter28.frames
+johnson/counter28.bit
+
+# Editor / OS noise.
+*.swp
+*~
+.DS_Store
