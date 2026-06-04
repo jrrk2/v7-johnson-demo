@@ -134,17 +134,6 @@ endif
 
 $(DEPS)/.initialised:
 	git submodule update --init --recursive
-	@# Local patches to submodules we don't control (openXC7 forks).  Applied
-	@# after checkout, idempotently — skip any patch already present so a
-	@# re-run or a partially-patched tree doesn't error.
-	@for p in $(ROOT)/patches/*.patch; do \
-	    [ -e "$$p" ] || continue; \
-	    if git -C $(NEXTPNR_DIR) apply --reverse --check "$$p" 2>/dev/null; then \
-	        echo "patch already applied: $$(basename $$p)"; \
-	    else \
-	        git -C $(NEXTPNR_DIR) apply "$$p" && echo "applied patch: $$(basename $$p)"; \
-	    fi; \
-	done
 	@touch $@
 
 
