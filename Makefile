@@ -25,6 +25,20 @@ DEMO           := $(ROOT)/johnson
 # Detect platform — apt vs brew choose at deps target.
 UNAME_S        := $(shell uname -s)
 
+# nextpnr links Boost::Python, whose ABI is tied to one exact CPython minor
+# version.  Distro Boost (libboost_pythonNNN) is built against the *system*
+# python, but a `python3` earlier on PATH (e.g. a conda env) is often a
+# different minor with no matching Boost component — cmake then fails with
+# "No version of Boost::Python 3.x could be found".  On Linux, read the
+# version baked into the installed libboost_python and pin everything to the
+# matching interpreter so the venv and Boost::Python stay ABI-consistent.
+ifeq ($(UNAME_S),Linux)
+BOOST_PY_VER   := $(shell ls /usr/lib/*/libboost_python3*.so 2>/dev/null | \
+                    grep -oE 'python3[0-9]+' | head -1 | \
+                    sed -E 's/python3([0-9]+)/3.\1/')
+SYS_PYTHON     := $(if $(BOOST_PY_VER),$(shell command -v python$(BOOST_PY_VER) 2>/dev/null))
+endif
+
 # Where each tool lives after `git submodule update --init`.
 NEXTPNR_DIR    := $(DEPS)/nextpnr-xilinx
 PRJXRAY_DIR    := $(DEPS)/prjxray
@@ -61,8 +75,10 @@ PRJXRAY_DB     := $(PRJXRAY_DIR)/database/virtex7
 # venv built from prjxray's requirements.txt — which installs prjxray,
 # fasm and python-sdf-timing editable from the in-tree submodules.  This
 # isolates the build from any prjxray installed elsewhere on the system.
-# Override PYTHON to pick the interpreter the venv is created from.
-PYTHON         ?= python3
+# Override PYTHON to pick the interpreter the venv is created from.  On Linux
+# default to the Boost-matched system python (see SYS_PYTHON above) so the venv
+# and nextpnr's Boost::Python agree; fall back to plain python3 elsewhere.
+PYTHON         ?= $(or $(SYS_PYTHON),python3)
 PRJXRAY_VENV   := $(PRJXRAY_DIR)/env
 PRJXRAY_PY     := $(PRJXRAY_VENV)/bin/python
 # Regular-file stamp used as the make target: env/bin/python is a symlink
@@ -118,6 +134,17 @@ endif
 
 $(DEPS)/.initialised:
 	git submodule update --init --recursive
+	@# Local patches to submodules we don't control (openXC7 forks).  Applied
+	@# after checkout, idempotently — skip any patch already present so a
+	@# re-run or a partially-patched tree doesn't error.
+	@for p in $(ROOT)/patches/*.patch; do \
+	    [ -e "$$p" ] || continue; \
+	    if git -C $(NEXTPNR_DIR) apply --reverse --check "$$p" 2>/dev/null; then \
+	        echo "patch already applied: $$(basename $$p)"; \
+	    else \
+	        git -C $(NEXTPNR_DIR) apply "$$p" && echo "applied patch: $$(basename $$p)"; \
+	    fi; \
+	done
 	@touch $@
 
 
@@ -150,6 +177,10 @@ $(PRJXRAY_DB_OK): $(PRJXRAY_DB_TAR)
 	cd $(PRJXRAY_DIR)/database && \
 	    tar --use-compress-program='zstd -d --long=27' -xf $(PRJXRAY_DB_TAR)
 	@test -s $@ || { echo "prjxray DB extract failed -- part.yaml missing" >&2; exit 1; }
+	@# tar restores the archive's stored mtimes, so the extracted part.yaml
+	@# is older than the downloaded tarball and make would re-extract every
+	@# run.  Bump its mtime so it registers as up to date against the tar.
+	@touch $@
 
 
 # ─── nextpnr-xilinx ────────────────────────────────────────────────────
@@ -169,6 +200,10 @@ BREW_EIGEN     := $(shell brew --prefix eigen 2>/dev/null)
 NEXTPNR_CMAKE  := -DCMAKE_C_COMPILER=$(BREW_LLVM)/bin/clang \
                   -DCMAKE_CXX_COMPILER=$(BREW_LLVM)/bin/clang++ \
                   -DEIGEN3_INCLUDE_DIRS=$(BREW_EIGEN)/include/eigen3
+else ifeq ($(UNAME_S),Linux)
+# Pin cmake's Python3 to the Boost-matched system interpreter so
+# find_package picks a python with an installed libboost_python component.
+NEXTPNR_CMAKE  := $(if $(SYS_PYTHON),-DPython3_EXECUTABLE=$(SYS_PYTHON))
 endif
 
 $(NEXTPNR_BIN): $(DEPS)/.initialised
