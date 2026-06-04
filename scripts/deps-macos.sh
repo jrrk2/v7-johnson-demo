@@ -10,22 +10,17 @@ fi
 
 brew update
 brew install \
-    cmake pkg-config git curl \
+    cmake pkg-config git curl zstd \
     boost eigen python@3.12 \
     libftdi libusb hidapi \
+    llvm libomp \
     opam \
-    icarus-verilog \
-    zstd
+    icarus-verilog
 
-# Project X-Ray Python venv.
-if [ ! -d deps/prjxray/env ] && [ -d deps/prjxray ]; then
-    pushd deps/prjxray >/dev/null
-    python3 -m venv env
-    env/bin/pip install --upgrade pip
-    env/bin/pip install -r requirements.txt 2>/dev/null || \
-      env/bin/pip install simplejson pyyaml fasm intervaltree numpy progressbar2
-    popd >/dev/null
-fi
+# Project X-Ray's Python venv (deps/prjxray/env) is built by the
+# Makefile from prjxray's requirements.txt — see the $(PRJXRAY_PY)
+# target — so it stays in the build graph and isolated from any
+# system-wide prjxray install.
 
 # OCaml side for System-Verilog-suite.
 if ! opam switch list 2>/dev/null | grep -q '5\.3\.0'; then

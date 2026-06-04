@@ -18,8 +18,12 @@ OUTDIR = "."
 execute("mkdir -p " .. OUTDIR)
 
 -- The recipe library is at a known path inside the SVS submodule.
+-- Resolution order: an explicit SVS_ROOT env var (os.getenv is a native
+-- binding in sv_suite's lua-ml), then the submodule path the Makefile
+-- passes as the first script argument (ARGV[1]), then the in-tree
+-- relative path for running by hand from this directory.
 local svs_root = os.getenv("SVS_ROOT")
-   or (os.getenv("V7DEMO_ROOT") and (os.getenv("V7DEMO_ROOT") .. "/deps/System-Verilog-suite"))
-   or (os.getenv("HOME") .. "/v7-johnson-demo/deps/System-Verilog-suite")
+   or (ARGN and ARGN >= 1 and ARGV[1])
+   or "../deps/System-Verilog-suite"
 
 dofile(svs_root .. "/recipes/wrapped_inner_to_nextpnr.lua")

@@ -34,8 +34,10 @@ SVS_DIR        := $(DEPS)/System-Verilog-suite
 # Chipdb fetched from openXC7 release rather than built from scratch
 # (full build needs RapidWright, ~10 min).  Update CHIPDB_TAG to a
 # newer release tag when one is published.
+# The release publishes the chipdb zstd-compressed (xc7vx485t.bin.zst);
+# we fetch that and decompress to the plain .bin nextpnr expects.
 CHIPDB_TAG     := chipdb-2026-06-03
-CHIPDB_URL     := https://github.com/openXC7/nextpnr-xilinx/releases/download/$(CHIPDB_TAG)/xc7vx485t.bin
+CHIPDB_URL     := https://github.com/openXC7/nextpnr-xilinx/releases/download/$(CHIPDB_TAG)/xc7vx485t.bin.zst
 CHIPDB         := $(NEXTPNR_DIR)/xilinx/xc7vx485t.bin
 
 # Project X-Ray database (segbits / tilegrid / part.yaml etc) is a
@@ -54,6 +56,19 @@ OFL_BIN        := $(OPENFLD_DIR)/build/openFPGALoader
 FASM2FRAMES    := $(PRJXRAY_DIR)/utils/fasm2frames.py
 FRAMES2BIT     := $(PRJXRAY_DIR)/build/tools/xc7frames2bit
 PRJXRAY_DB     := $(PRJXRAY_DIR)/database/virtex7
+
+# Project X-Ray's Python tools (fasm2frames) run from a self-contained
+# venv built from prjxray's requirements.txt — which installs prjxray,
+# fasm and python-sdf-timing editable from the in-tree submodules.  This
+# isolates the build from any prjxray installed elsewhere on the system.
+# Override PYTHON to pick the interpreter the venv is created from.
+PYTHON         ?= python3
+PRJXRAY_VENV   := $(PRJXRAY_DIR)/env
+PRJXRAY_PY     := $(PRJXRAY_VENV)/bin/python
+# Regular-file stamp used as the make target: env/bin/python is a symlink
+# to the interpreter, so make would follow it to that binary's (old)
+# mtime and rebuild the venv every run.
+PRJXRAY_STAMP  := $(PRJXRAY_VENV)/.installed
 
 # Demo design + intermediate artefacts.
 PART           := xc7vx485tffg1761-2
@@ -114,7 +129,9 @@ $(CHIPDB): | $(DEPS)/.initialised
 	@mkdir -p $(dir $@)
 	@if [ ! -s $@ ]; then \
 	   echo "Fetching chipdb $(CHIPDB_TAG)..."; \
-	   curl -fL -o $@ $(CHIPDB_URL); \
+	   curl -fL -o $@.zst $(CHIPDB_URL); \
+	   zstd -df $@.zst -o $@; \
+	   rm -f $@.zst; \
 	fi
 
 
@@ -137,10 +154,33 @@ $(PRJXRAY_DB_OK): $(PRJXRAY_DB_TAR)
 
 # ─── nextpnr-xilinx ────────────────────────────────────────────────────
 
+# nextpnr-xilinx hardcodes a bare `-fopenmp` in its Release flags (to
+# accelerate the analytic placer).  On macOS the default /usr/bin/c++ is
+# Apple clang, which rejects that flag outright.  Build it with Homebrew
+# LLVM clang instead — it supports -fopenmp and bundles libomp.  Linux
+# uses gcc, which handles -fopenmp natively, so no override there.
+ifeq ($(UNAME_S),Darwin)
+BREW_LLVM      := $(shell brew --prefix llvm 2>/dev/null)
+BREW_EIGEN     := $(shell brew --prefix eigen 2>/dev/null)
+# Homebrew clang for -fopenmp/libomp, plus an explicit Eigen include
+# path: nextpnr's CMake reads include_directories(${EIGEN3_INCLUDE_DIRS})
+# (plural) but config-mode find_package(Eigen3) only sets the singular
+# var, so the header dir is otherwise never added on macOS.
+NEXTPNR_CMAKE  := -DCMAKE_C_COMPILER=$(BREW_LLVM)/bin/clang \
+                  -DCMAKE_CXX_COMPILER=$(BREW_LLVM)/bin/clang++ \
+                  -DEIGEN3_INCLUDE_DIRS=$(BREW_EIGEN)/include/eigen3
+endif
+
 $(NEXTPNR_BIN): $(DEPS)/.initialised
+ifeq ($(UNAME_S),Darwin)
+	@test -x "$(BREW_LLVM)/bin/clang++" || { \
+	   echo "Homebrew LLVM clang not found — run 'make deps' (or 'brew install llvm')." >&2; \
+	   exit 1; }
+endif
 	cmake -S $(NEXTPNR_DIR) -B $(NEXTPNR_DIR)/build \
 	    -DARCH=xilinx \
-	    -DCMAKE_BUILD_TYPE=Release
+	    -DCMAKE_BUILD_TYPE=Release \
+	    $(NEXTPNR_CMAKE)
 	cmake --build $(NEXTPNR_DIR)/build -j$$(getconf _NPROCESSORS_ONLN)
 
 
@@ -152,6 +192,15 @@ $(FRAMES2BIT): $(DEPS)/.initialised
 	    -DPRJXRAY_BUILD_TESTING=OFF
 	cmake --build $(PRJXRAY_DIR)/build -j$$(getconf _NPROCESSORS_ONLN) \
 	    --target xc7frames2bit
+
+# Self-contained Python venv for prjxray's utils.  requirements.txt has
+# relative editable installs (-e third_party/fasm, -e .), so pip must run
+# from inside the prjxray tree.
+$(PRJXRAY_STAMP): $(DEPS)/.initialised $(PRJXRAY_DIR)/requirements.txt
+	$(PYTHON) -m venv $(PRJXRAY_VENV)
+	$(PRJXRAY_VENV)/bin/pip install --upgrade pip wheel
+	cd $(PRJXRAY_DIR) && env/bin/pip install -r requirements.txt
+	@touch $@
 
 
 # ─── openFPGALoader ────────────────────────────────────────────────────
@@ -171,7 +220,7 @@ $(SVS_BIN): $(DEPS)/.initialised
 # ─── demo build ────────────────────────────────────────────────────────
 
 $(DEMO_JSON): $(SVS_BIN) $(DEMO_RECIPE) | $(SVS_DIR)
-	cd $(DEMO) && $(SVS_BIN) script $(DEMO_RECIPE)
+	cd $(DEMO) && $(SVS_BIN) script $(DEMO_RECIPE) $(SVS_DIR)
 
 $(DEMO_FASM): $(DEMO_JSON) $(NEXTPNR_BIN) $(CHIPDB)
 	cd $(DEMO) && \
@@ -180,11 +229,9 @@ $(DEMO_FASM): $(DEMO_JSON) $(NEXTPNR_BIN) $(CHIPDB)
 	        --chipdb $(CHIPDB) --xdc top.xdc \
 	        --json $(DEMO_JSON) --fasm $@ --freq 200
 
-$(DEMO_FRAMES): $(DEMO_FASM) $(PRJXRAY_DB_OK)
-	@. $(PRJXRAY_DIR)/env/bin/activate 2>/dev/null || true; \
+$(DEMO_FRAMES): $(DEMO_FASM) $(PRJXRAY_DB_OK) | $(PRJXRAY_STAMP)
 	XRAY_ALLOW_MISSING_FEATURES=1 \
-	PATH=$(PRJXRAY_DIR)/env/bin:$$PATH \
-	python3 $(FASM2FRAMES) \
+	$(PRJXRAY_PY) $(FASM2FRAMES) \
 	    --db-root $(PRJXRAY_DB) --part $(PART) $< $@
 
 $(DEMO_BIT): $(DEMO_FRAMES) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
@@ -200,7 +247,7 @@ clean:
 	rm -f $(DEMO_BIT) $(DEMO_FRAMES) $(DEMO_FASM) $(DEMO_JSON) \
 	    $(DEMO)/top.edif
 	rm -rf $(NEXTPNR_DIR)/build $(PRJXRAY_DIR)/build \
-	    $(OPENFLD_DIR)/build $(SVS_DIR)/_build
+	    $(OPENFLD_DIR)/build $(SVS_DIR)/_build $(PRJXRAY_VENV)
 
 distclean: clean
 	rm -f $(CHIPDB) $(DEPS)/.initialised
