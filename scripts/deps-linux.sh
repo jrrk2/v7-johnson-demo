@@ -11,7 +11,8 @@ sudo apt-get install -y --no-install-recommends \
     libftdi-dev libusb-1.0-0-dev libudev-dev libhidapi-dev \
     libgtk-3-dev libjpeg-dev \
     opam ocaml-base-compiler \
-    iverilog
+    iverilog \
+    zstd
 
 # Project X-Ray uses a Python venv with simplejson, pyyaml etc.
 if [ ! -d deps/prjxray/env ] && [ -d deps/prjxray ]; then

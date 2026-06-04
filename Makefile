@@ -38,6 +38,15 @@ CHIPDB_TAG     := chipdb-2026-06-03
 CHIPDB_URL     := https://github.com/openXC7/nextpnr-xilinx/releases/download/$(CHIPDB_TAG)/xc7vx485t.bin
 CHIPDB         := $(NEXTPNR_DIR)/xilinx/xc7vx485t.bin
 
+# Project X-Ray database (segbits / tilegrid / part.yaml etc) is a
+# fuzzer artefact, also published as a release tarball — pulling it
+# avoids needing Vivado to re-fuzz from scratch (~hours of build).
+PRJXRAY_DB_TAG := db-virtex7-2026-06-03
+PRJXRAY_DB_URL := https://github.com/openXC7/prjxray/releases/download/$(PRJXRAY_DB_TAG)/prjxray-database-virtex7-2026-06-03.tar.zst
+PRJXRAY_DB_TAR := $(BUILD)/$(PRJXRAY_DB_TAG).tar.zst
+# Sentinel file that proves the DB tarball has been extracted.
+PRJXRAY_DB_OK  := $(PRJXRAY_DIR)/database/virtex7/xc7vx485tffg1761-2/part.yaml
+
 # Cargo of tool binaries the demo step consumes.
 NEXTPNR_BIN    := $(NEXTPNR_DIR)/build/nextpnr-xilinx
 SVS_BIN        := $(SVS_DIR)/_build/default/sv_suite.exe
@@ -68,8 +77,8 @@ all: $(DEMO_BIT)
 help:
 	@sed -n 's/^# //p; /^\.PHONY/q' $(firstword $(MAKEFILE_LIST))
 
-tools: $(NEXTPNR_BIN) $(SVS_BIN) $(OFL_BIN) $(FRAMES2BIT) $(CHIPDB)
-	@echo "All tools built and chipdb fetched."
+tools: $(NEXTPNR_BIN) $(SVS_BIN) $(OFL_BIN) $(FRAMES2BIT) $(CHIPDB) $(PRJXRAY_DB_OK)
+	@echo "All tools built and chipdb + prjxray DB fetched."
 
 johnson.bit: $(DEMO_BIT)
 
@@ -107,6 +116,23 @@ $(CHIPDB): | $(DEPS)/.initialised
 	   echo "Fetching chipdb $(CHIPDB_TAG)..."; \
 	   curl -fL -o $@ $(CHIPDB_URL); \
 	fi
+
+
+# ─── prjxray virtex7 fuzzer DB (openXC7 release, ~1.6 MB compressed) ──
+
+prjxray-db: $(PRJXRAY_DB_OK)
+
+$(PRJXRAY_DB_TAR): | $(DEPS)/.initialised
+	@mkdir -p $(dir $@)
+	@echo "Fetching prjxray virtex7 DB $(PRJXRAY_DB_TAG)..."
+	curl -fL -o $@ $(PRJXRAY_DB_URL)
+
+$(PRJXRAY_DB_OK): $(PRJXRAY_DB_TAR)
+	@echo "Extracting prjxray virtex7 DB..."
+	@mkdir -p $(PRJXRAY_DIR)/database
+	cd $(PRJXRAY_DIR)/database && \
+	    tar --use-compress-program='zstd -d --long=27' -xf $(PRJXRAY_DB_TAR)
+	@test -s $@ || { echo "prjxray DB extract failed -- part.yaml missing" >&2; exit 1; }
 
 
 # ─── nextpnr-xilinx ────────────────────────────────────────────────────
@@ -154,14 +180,14 @@ $(DEMO_FASM): $(DEMO_JSON) $(NEXTPNR_BIN) $(CHIPDB)
 	        --chipdb $(CHIPDB) --xdc top.xdc \
 	        --json $(DEMO_JSON) --fasm $@ --freq 200
 
-$(DEMO_FRAMES): $(DEMO_FASM) $(PRJXRAY_DB)
+$(DEMO_FRAMES): $(DEMO_FASM) $(PRJXRAY_DB_OK)
 	@. $(PRJXRAY_DIR)/env/bin/activate 2>/dev/null || true; \
 	XRAY_ALLOW_MISSING_FEATURES=1 \
 	PATH=$(PRJXRAY_DIR)/env/bin:$$PATH \
 	python3 $(FASM2FRAMES) \
 	    --db-root $(PRJXRAY_DB) --part $(PART) $< $@
 
-$(DEMO_BIT): $(DEMO_FRAMES) $(FRAMES2BIT)
+$(DEMO_BIT): $(DEMO_FRAMES) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
 	$(FRAMES2BIT) \
 	    --part_file $(PRJXRAY_DB)/$(PART)/part.yaml \
 	    --part_name $(PART) \

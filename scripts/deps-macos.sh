@@ -14,7 +14,8 @@ brew install \
     boost eigen python@3.12 \
     libftdi libusb hidapi \
     opam \
-    icarus-verilog
+    icarus-verilog \
+    zstd
 
 # Project X-Ray Python venv.
 if [ ! -d deps/prjxray/env ] && [ -d deps/prjxray ]; then
