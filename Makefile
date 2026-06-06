@@ -57,8 +57,8 @@ CHIPDB         := $(NEXTPNR_DIR)/xilinx/xc7vx485t.bin
 # Project X-Ray database (segbits / tilegrid / part.yaml etc) is a
 # fuzzer artefact, also published as a release tarball — pulling it
 # avoids needing Vivado to re-fuzz from scratch (~hours of build).
-PRJXRAY_DB_TAG := db-virtex7-2026-06-03
-PRJXRAY_DB_URL := https://github.com/openXC7/prjxray/releases/download/$(PRJXRAY_DB_TAG)/prjxray-database-virtex7-2026-06-03.tar.zst
+PRJXRAY_DB_TAG := db-virtex7-2026-06-06
+PRJXRAY_DB_URL := https://github.com/openXC7/prjxray/releases/download/$(PRJXRAY_DB_TAG)/prjxray-database-virtex7-2026-06-06.tar.zst
 PRJXRAY_DB_TAR := $(BUILD)/$(PRJXRAY_DB_TAG).tar.zst
 # Sentinel file that proves the DB tarball has been extracted.
 PRJXRAY_DB_OK  := $(PRJXRAY_DIR)/database/virtex7/xc7vx485tffg1761-2/part.yaml
