@@ -1,0 +1,29 @@
+{
+  "name": "openxc7-database-virtex7",
+  "description": "Canonical prjxray virtex7 device database for the openXC7 flow (VC707, xc7vx485tffg1761-2). The DB segbits/tilegrid live in this repo; the chipdb and wire oracle are derived release assets.",
+  "family": "virtex7",
+  "parts": ["xc7vx485tffg1761-2"],
+  "db": {
+    "repo": "git@github.com:openXC7/database-virtex7.git",
+    "commit": "",
+    "_note": "set per-release by recipes/cut-release.sh = git rev-parse HEAD of the DB"
+  },
+  "derived_artifacts": {
+    "chipdb": {
+      "file": "xc7vx485t.bin.zst",
+      "recipe": "recipes/build-chipdb.sh",
+      "tool": "nextpnr-xilinx bbaexport.py --xray <this DB> + bbasm",
+      "nextpnr_xilinx_commit": "c80c431a66b836e10c020a6463fc25fdda3223a2",
+      "_note": "the .bba binary format is tied to this nextpnr-xilinx commit; rebuild against it",
+      "sha256": ""
+    },
+    "oracle": {
+      "file": "xc7vx485tffg1761-2.oracle.txt.gz",
+      "recipe": "recipes/build-oracle.sh",
+      "tool": "RapidWright BuildWireOracle",
+      "rapidwright": "2025.2.1",
+      "_note": "RapidWright Device model; independent of the segbits here",
+      "sha256": ""
+    }
+  }
+}

@@ -45,21 +45,23 @@ PRJXRAY_DIR    := $(DEPS)/prjxray
 OPENFLD_DIR    := $(DEPS)/openFPGALoader
 SVS_DIR        := $(DEPS)/System-Verilog-suite
 
-# Chipdb fetched from openXC7 release rather than built from scratch
-# (full build needs RapidWright, ~10 min).  Update CHIPDB_TAG to a
-# newer release tag when one is published.
-# The release publishes the chipdb zstd-compressed (xc7vx485t.bin.zst);
-# we fetch that and decompress to the plain .bin nextpnr expects.
-CHIPDB_TAG     := chipdb-2026-06-03
-CHIPDB_URL     := https://github.com/openXC7/nextpnr-xilinx/releases/download/$(CHIPDB_TAG)/xc7vx485t.bin.zst
+# Device database (segbits/tilegrid) AND the derived chipdb now come from
+# ONE synchronized openXC7/database-virtex7 release, so they can never drift
+# (the old setup pulled them from two tool-fork repos with separate dates).
+# The chipdb (xc7vx485t.bin.zst, fetched + decompressed to the plain .bin
+# nextpnr expects) is built from this exact DB; its .bba format is tied to the
+# nextpnr-xilinx commit in the release manifest.json — keep deps/nextpnr-xilinx
+# on that commit.  Bump DEVICE_DB_TAG to adopt a newer release.
+DEVICE_DB_TAG  := device-db-2026-06-09
+DEVICE_DB_REL  := https://github.com/openXC7/database-virtex7/releases/download/$(DEVICE_DB_TAG)
+
+CHIPDB_TAG     := $(DEVICE_DB_TAG)
+CHIPDB_URL     := $(DEVICE_DB_REL)/xc7vx485t.bin.zst
 CHIPDB         := $(NEXTPNR_DIR)/xilinx/xc7vx485t.bin
 
-# Project X-Ray database (segbits / tilegrid / part.yaml etc) is a
-# fuzzer artefact, also published as a release tarball — pulling it
-# avoids needing Vivado to re-fuzz from scratch (~hours of build).
-PRJXRAY_DB_TAG := db-virtex7-2026-06-06
-PRJXRAY_DB_URL := https://github.com/openXC7/prjxray/releases/download/$(PRJXRAY_DB_TAG)/prjxray-database-virtex7-2026-06-06.tar.zst
-PRJXRAY_DB_TAR := $(BUILD)/$(PRJXRAY_DB_TAG).tar.zst
+PRJXRAY_DB_TAG := $(DEVICE_DB_TAG)
+PRJXRAY_DB_URL := $(DEVICE_DB_REL)/prjxray-database-virtex7.tar.zst
+PRJXRAY_DB_TAR := $(BUILD)/$(DEVICE_DB_TAG).tar.zst
 # Sentinel file that proves the DB tarball has been extracted.
 PRJXRAY_DB_OK  := $(PRJXRAY_DIR)/database/virtex7/xc7vx485tffg1761-2/part.yaml
 
