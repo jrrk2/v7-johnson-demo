@@ -6,9 +6,13 @@ assembly, and finally flashes a working bit onto a VC707 development
 board.  No Vivado, no RapidWright at runtime, no proprietary device
 data — pure permissive-licensed toolchain.
 
-The demo design is a 28-bit PRBS prescaler driving an 8-bit Johnson
+The headline demo is a 28-bit PRBS prescaler driving an 8-bit Johnson
 counter on the VC707's 8 user LEDs, ticking at ~1 Hz.  Easy to see
 working from across the room.
+
+A second, much larger demo lives in [`uartram/`](#advanced-demo-open-flow-uart-dsp-calculator-uartram):
+a UART **DSP calculator** (soft CPU + DSP48E1 + block RAM) that stress-tests the
+open place-and-route + bitstream back-end on Virtex-7 hard blocks.
 
 ## Quick start
 
@@ -65,6 +69,106 @@ avoids the ~200 MB RapidWright jar.
 `top.v` wraps the core with the IBUFDS/BUFG/IBUF/8x OBUF primitives the
 flow needs at the VC707's IO pad.  `top.xdc` pins everything to the
 board's documented sysclk_p/sysclk_n, CPU_RESET, and GPIO_LED_0..7.
+
+## Advanced demo: open-flow UART DSP calculator (`uartram/`)
+
+The Johnson counter proves the flow end-to-end on a small single-clock design.
+The `uartram/` directory pushes the **open-source place-and-route + bitstream
+back-end** (nextpnr-xilinx + prjxray) much harder: a self-contained **32-bit
+integer calculator** spoken over the VC707's USB-UART.
+
+```
+host> 40115/355=    ->   40115/355=113
+host> 65535*65535=  ->   65535*65535=4294836225
+host> 100-1=        ->   100-1=99
+```
+
+The design contains a small soft CPU (`calc_core` — an 8-bit accumulator machine
+with its own ISA), an **explicit DSP48E1** multiply/MACC coprocessor, a
+**2048×8 RAMB18** program+data memory, and a carry-free LFSR UART — roughly 970
+cells. The calculator program is written in an assembler (`asm.py`, which also
+simulates the ISA for self-test) and baked into the block-RAM init.
+
+### Flow (hybrid: Vivado front-end, open back-end)
+Unlike the Johnson demo, this design is **synthesised by Vivado** (its DSP/BRAM
+inference and the soft CPU were simplest to drive from Vivado). Everything after
+synthesis is the same fully open toolchain:
+
+```
+Vivado synth -> EDIF
+  -> System-Verilog-suite  (edif_to_nextpnr.lua: EDIF -> nextpnr JSON, a reader, not a synthesiser)
+  -> nextpnr-xilinx        (place + route + FASM)
+  -> patch_rx_iob.py       (2-bit prjxray IOB workaround, see below)
+  -> prjxray fasm2frames + xc7frames2bit  -> .bit
+```
+
+So it demonstrates the **open P&R + bitstream tools handling hard blocks**
+(DSP48E1, block RAM, carry chains, single-ended HP-bank I/O) — not yet a pure-OSS
+front-to-back build like the LED counter. Closing that gap (teaching SVS to
+synthesise the calculator directly) is the main next step — see
+[Outstanding investigations](#outstanding-investigations).
+
+### Build / flash / test
+Requires Vivado 2020.1 (synthesis only) plus the already-built open tools
+(`make tools`).
+
+```bash
+cd uartram
+python3 asm.py --emit          # assemble + self-test the program -> calc_init.svh
+bash build_open_min.sh         # Vivado synth + open P&R + bitstream -> /tmp/uartram_min.bit
+../deps/openFPGALoader/build/openFPGALoader -c digilent --freq 15M /tmp/uartram_min.bit
+```
+
+Then talk to it at **115200 8N1** on the USB-UART (`/dev/ttyUSB0`):
+
+```bash
+picocom -b 115200 /dev/ttyUSB0   # type e.g. "2+3=" ; expect "2+3=5"
+```
+
+Iterating on the *program* only (no logic change) is fast: `init_update.sh`
+patches the block-RAM contents into the already-placed FASM and re-emits the bit
+in seconds, skipping synthesis and P&R entirely.
+
+### What was achieved
+On the VC707 at the 156.25 MHz Si570 user clock, through the open back-end:
+
+- **Full calculator HW-verified** — 15/15 cases incl. multi-digit output,
+  subtraction, negative results, and division (`5+5=10`, `8-3=5`, `5-8=-3`,
+  `40115/355=113`, full 32-bit borrow chains).
+- **DSP48E1 multiply HW-verified** — 20 sign-sensitive 32×32 cases (built from
+  three signed 16×16 partials): `65535²`, `32768²`, overflow wrap, etc.
+- **DSP48E1 multiply-accumulate HW-verified** — 12 `P = C + A*B` cases driving
+  the accumulator C-port (OPMODE `0x35`), a path the calculator itself never
+  uses.
+
+This is the first design in this flow to exercise the DSP48E1, block RAM, a soft
+CPU, and bidirectional UART I/O — well beyond the LED counter.
+
+### Outstanding investigations
+- **Pure-OSS synthesis of the calculator (the main next step).** The calculator's
+  netlist currently comes from Vivado. The goal is to get System-Verilog-suite
+  "up to snuff" so it elaborates and gate-maps this design — DSP48E1 and RAMB18
+  inference plus the soft CPU — straight to EDIF/JSON, removing the Vivado
+  front-end so the calculator becomes a **100%-open front-to-back** build like the
+  Johnson demo.
+- **`OP_SBC` (subtract-with-borrow) is mis-compiled by the open flow.** It is the
+  only ALU op with an *inverted dynamic carry-in* (`~cy`). `ADD`, `ADC`, and
+  single-byte `SUB` are all bit-exact on hardware, but multi-byte `SBC` subtracts
+  one too many. Root cause lies in the CARRY4 carry-in handling (nextpnr packing
+  / FASM emit, or a prjxray segbit) and is **not yet fixed in the tooling**. The
+  calculator works around it entirely in software: every subtract is a
+  two's-complement add (`X + ~Y + 1`) using only known-good ops, so the shipped
+  program emits **no `SBC` at all** (the original SBC version is preserved as
+  `asm_with_sbc.py.bak`). A proper nextpnr/prjxray fix for the inverted dynamic
+  CYINIT is the open item.
+- **HP-bank single-ended LVCMOS18 `rx` input needs a 2-bit frame patch.** prjxray's
+  Virtex-7 DB omits an input-enable bit (and sets a spurious glue bit) for the
+  slave-site pin used for `rx` (AU33); `patch_rx_iob.py` sets/clears those two
+  bits after `fasm2frames`. Proven by a Vivado-FASM round-trip distorting
+  identically; an upstream prjxray IOB fuzz/fix is pending.
+- **Timing headroom.** The calculator closes timing at 156.25 MHz (user clock)
+  but not at the 200 MHz sysclk in the open flow (Fmax ≈ 150–185 MHz depending on
+  placement), so it runs on the slower Si570 clock.
 
 ## Supported platforms
 
