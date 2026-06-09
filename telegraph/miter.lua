@@ -1,0 +1,7 @@
+print("== miter: SVS-synth vs source (augment then expand) ==")
+impl = svd.read_nextpnr_json("top.json")
+impl = svd.augment_xil_models(impl)
+impl = svd.expand_primitives_for_z3(impl)
+spec = svd.parse("verible-ext", "top", {"top.v", "telegraph_core.v"})
+spec = svd.augment_xil_models(spec)
+print("VERDICT: " .. svd.miter(svd.pick(spec,"top"), svd.pick(impl,"top")))

@@ -1,0 +1,5 @@
+impl = svd.read_nextpnr_json("/tmp/telegraph_edif.json")
+impl = svd.augment_xil_models(impl)
+spec = svd.parse("verible-ext", "top", {"top.v", "telegraph_core.v"})
+spec = svd.augment_xil_models(spec)
+print("VERDICT: " .. svd.miter(svd.prep_for_z3(svd.pick(spec,"top")), svd.prep_for_z3(svd.pick(impl,"top"))))

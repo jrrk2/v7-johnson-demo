@@ -20,3 +20,30 @@ johnson/counter28.bit
 *.swp
 *~
 .DS_Store
+
+# Per-experiment build scratch (Vivado / xsim / Python) and rebuildable
+# FPGA artefacts.  The HDL/asm/scripts are the sources; bit/fasm/frames/edif
+# regenerate from them.
+.Xil/
+.hbs/
+.cache/
+xsim.dir/
+__pycache__/
+*.pyc
+*.jou
+*.log
+*.pb
+*.wdb
+*.str
+*.backup.log
+*.backup.jou
+parser_stderr.log
+*.report
+*.bit
+*.fasm
+*.frames
+*.edif
+top.json
+
+# Claude Code local runtime state.
+.claude/
