@@ -57,11 +57,12 @@ module top (
         .clk(clk),.rst(rst_all),
         .rx_data(rxf_dout),.rx_valid(!rxf_empty),.rx_rd(core_rx_rd),
         .tx_byte(core_tx),.tx_stb(core_tx_stb),.tx_rdy(!txf_full),.led(led_int));
+    reg txf_rd;   // declared before the txfifo instance below (slang rejects use-before-decl; Vivado tolerated it)
     byte_fifo txfifo (.clk(clk),.rst(rst_all),.wr(core_tx_stb),.din(core_tx),.full(txf_full),
         .rd(txf_rd),.dout(txf_dout),.empty(txf_empty));
 
     // ---- TX: drain tx FIFO to uart_transmitter ----
-    reg [7:0] tsr; reg txstart, txf_rd; reg [1:0] tst;
+    reg [7:0] tsr; reg txstart; reg [1:0] tst;
     wire txfinished, sout;
     localparam T_IDLE=0,T_START=1,T_RUN=2,T_END=3;
     always @(posedge clk or posedge rst_all)

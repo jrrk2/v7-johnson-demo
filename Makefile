@@ -108,11 +108,12 @@ TG_RECIPE      := $(TG_DIR)/recipe.lua
 
 # ─── high-level targets ────────────────────────────────────────────────
 
-.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash clean distclean help
+.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash clean distclean help
 
 # Keep intermediates even if a recipe exits non-zero (the telegraph route
-# step does, on its skipped don't-care CARRY4.S arcs + timing miss).
-.PRECIOUS: $(TG_FASM) $(TG_FRAMES) $(DEMO_FASM) $(DEMO_FRAMES)
+# step does, on its skipped don't-care CARRY4.S arcs + timing miss; the calc
+# fasm is kept if a seed misses 200 MHz so you can inspect/retry).
+.PRECIOUS: $(TG_FASM) $(TG_FRAMES) $(DEMO_FASM) $(DEMO_FRAMES) $(CALC_FASM) $(CALC_FRAMES)
 
 all: $(DEMO_BIT)
 	@echo
@@ -320,12 +321,92 @@ $(TG_BIT): $(TG_FRAMES) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
 	    --frm_file $< --output_file $@
 
 
+# ─── calculator (uartram) — fully-open yosys flow (NO Vivado, NO plugin) ─
+# The UART DSP calculator (soft CPU + DSP48E1 + block RAM), synthesised by
+# STOCK yosys reading the SystemVerilog directly (read_verilog -sv), then the
+# same open P&R / bitstream back-end as the demos.  100%-open front-to-back.
+# Unlike uartram/build_open_min.sh (which synthesises via Vivado) this needs no
+# Vivado; and unlike the earlier yosys-slang route it needs no plugin — just
+# yosys (brew install yosys / apt install yosys / oss-cad-suite).  Builds on
+# macOS too.
+#
+# xil_bb.v supplies black-box stubs for IBUF/OBUF/BUFG/IBUFDS/DSP48E1 with full
+# Vivado params (yosys's built-in DSP48E1 lacks them); it is read first.
+#
+# Default clock = the 156.25 MHz Si570 USER_CLOCK (top_min_uc.xdc) for timing
+# margin — the 200 MHz onboard SYSCLK is marginal in nextpnr.  For sysclk 200:
+#   make calc CALC_DEFINE= CALC_XDC=top_min.xdc CALC_FREQ=200
+CALC_DIR    := $(ROOT)/uartram
+CALC_BIT    := $(CALC_DIR)/uartram_calc.bit
+CALC_FRAMES := $(CALC_DIR)/uartram_calc.frames
+CALC_FASM   := $(CALC_DIR)/uartram_calc.fasm
+CALC_JSON   := $(CALC_DIR)/uartram_calc.json
+CALC_SRCS   := top_min.sv calc_core.sv byte_fifo.sv lfsr_div.sv uart_rx_lfsr.sv \
+               uart_src/uart_transmitter.sv uart_src/slib_input_sync.sv
+CALC_DEPS   := $(addprefix $(CALC_DIR)/,$(CALC_SRCS) xil_bb.v calc_init.svh)
+CALC_XDC    ?= top_min_uc.xdc
+CALC_DEFINE ?= -DUSE_USERCLK
+# nextpnr placement is not fully deterministic, so sweep seeds and take the
+# first that meets CALC_FREQ (fall back to the best if none do).  At 156 MHz
+# (userclk) every seed has margin; 200 MHz (sysclk) is tight (~1/7 seeds).
+CALC_SEEDS  ?= 1 4 42 19 12 31 7 23 2 3
+CALC_FREQ   ?= 156
+
+YOSYS        ?= $(firstword $(wildcard $(HOME)/oss-cad-suite/bin/yosys \
+                  $(HOME)/OpenROAD-flow-scripts/tools/install/yosys/bin/yosys) yosys)
+
+calc calc.bit: $(CALC_BIT)
+	@echo "Calculator bit: $(CALC_BIT)  (flash: make calc-flash)"
+
+# stock-yosys synthesis -> nextpnr JSON (no Vivado, no SVS, no plugin)
+$(CALC_JSON): $(CALC_DEPS)
+	cd $(CALC_DIR) && $(YOSYS) -p "read_verilog -sv $(CALC_DEFINE) xil_bb.v $(CALC_SRCS); \
+	    hierarchy -top top; synth_xilinx -flatten -family xc7; write_json $(CALC_JSON)"
+
+# nextpnr seed sweep (each run serialised via flock): take the first seed that
+# meets CALC_FREQ; if none do, use the best-Fmax result and warn.
+$(CALC_FASM): $(CALC_JSON) $(CALC_DIR)/$(CALC_XDC) $(NEXTPNR_BIN) $(CHIPDB)
+	@cd $(CALC_DIR) && best=0; bestfasm=; rm -f $@; \
+	for s in $(CALC_SEEDS); do \
+	  flock /tmp/nextpnr.lock env NEXTPNR_ARC_MAX_VISIT=2000000 NEXTPNR_SKIP_FAILED_ARCS=1 \
+	    $(NEXTPNR_BIN) --router router2 --seed $$s --chipdb $(CHIPDB) --xdc $(CALC_XDC) \
+	      --json $(CALC_JSON) --fasm $@.s$$s --freq $(CALC_FREQ) >$@.s$$s.log 2>&1; \
+	  f=$$(grep -i "Max frequency for clock 'clk'" $@.s$$s.log | tail -1 | grep -oE "[0-9]+\.[0-9]+" | head -1); \
+	  echo "  nextpnr seed $$s -> $${f:-FAIL} MHz"; \
+	  if [ -s $@.s$$s ] && awk "BEGIN{exit !($${f:-0}>=$(CALC_FREQ))}"; then \
+	    cp $@.s$$s $@; echo "  -> meets $(CALC_FREQ) MHz at seed $$s"; break; fi; \
+	  if [ -s $@.s$$s ] && awk "BEGIN{exit !($${f:-0}>$$best)}"; then best=$${f:-0}; bestfasm=$@.s$$s; fi; \
+	done; \
+	if [ ! -f $@ ]; then \
+	  [ -n "$$bestfasm" ] || { echo "ERROR: no seed produced a routed fasm"; exit 1; }; \
+	  echo "  WARNING: no seed met $(CALC_FREQ) MHz; using best ($$best MHz). Retry with more CALC_SEEDS."; \
+	  cp $$bestfasm $@; fi; \
+	rm -f $@.s*
+
+# fasm2frames + the rx-input IOB frame patch (AU33; see patch_rx_iob.py)
+$(CALC_FRAMES): $(CALC_FASM) $(PRJXRAY_DB_OK) | $(PRJXRAY_STAMP)
+	XRAY_ALLOW_MISSING_FEATURES=1 \
+	$(PRJXRAY_PY) $(FASM2FRAMES) --db-root $(PRJXRAY_DB) --part $(PART) $< $@.tmp
+	$(PRJXRAY_PY) $(CALC_DIR)/patch_rx_iob.py $@.tmp $@
+	@rm -f $@.tmp
+
+$(CALC_BIT): $(CALC_FRAMES) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
+	$(FRAMES2BIT) \
+	    --part_file $(PRJXRAY_DB)/$(PART)/part.yaml \
+	    --part_name $(PART) \
+	    --frm_file $< --output_file $@
+
+calc-flash: $(CALC_BIT) | $(OFL_BIN)
+	$(OFL_BIN) --cable digilent --freq 15000000 $(CALC_BIT)
+
+
 # ─── clean ─────────────────────────────────────────────────────────────
 
 clean:
 	rm -f $(DEMO_BIT) $(DEMO_FRAMES) $(DEMO_FASM) $(DEMO_JSON) \
 	    $(DEMO)/top.edif \
-	    $(TG_BIT) $(TG_FRAMES) $(TG_FASM) $(TG_JSON) $(TG_DIR)/top.edif
+	    $(TG_BIT) $(TG_FRAMES) $(TG_FASM) $(TG_JSON) $(TG_DIR)/top.edif \
+	    $(CALC_BIT) $(CALC_FRAMES) $(CALC_FASM) $(CALC_JSON)
 	rm -rf $(NEXTPNR_DIR)/build $(PRJXRAY_DIR)/build \
 	    $(OPENFLD_DIR)/build $(SVS_DIR)/_build $(PRJXRAY_VENV)
 

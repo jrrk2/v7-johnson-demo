@@ -47,3 +47,9 @@ top.json
 
 # Claude Code local runtime state.
 .claude/
+
+# Calculator (uartram) yosys-slang flow intermediates (.bit is rebuildable).
+uartram/uartram_calc.json
+uartram/uartram_calc.fasm
+uartram/uartram_calc.frames
+uartram/uartram_calc.bit
