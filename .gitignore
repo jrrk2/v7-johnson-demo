@@ -53,3 +53,6 @@ uartram/uartram_calc.json
 uartram/uartram_calc.fasm
 uartram/uartram_calc.frames
 uartram/uartram_calc.bit
+
+# SVS-native synthesis work moved to jrrk2/System-Verilog-suite (separate repo).
+deps/System-Verilog-suite/

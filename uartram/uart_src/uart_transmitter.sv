@@ -49,21 +49,13 @@ module uart_transmitter(
 	output logic		SOUT); // 507
 /* design uart_transmitter */
 /* architecture rtl */
-typedef enum {FALSE,TRUE} bool_t; // 527
-typedef enum logic [3:0] {IDLE,
-START,
-BIT0,
-BIT1,
-BIT2,
-BIT3,
-BIT4,
-BIT5,
-BIT6,
-BIT7,
-PAR,
-STOP,
-STOP2} state_type; // 674
-state_type CState, NState; // 908
+// State encoding as localparam + plain reg (was a SystemVerilog typedef enum;
+// kept literal so the open-flow SVS front-end elaborates it without treating
+// the enum-typed variable as a module instance).
+localparam [3:0] IDLE=4'd0, START=4'd1, BIT0=4'd2, BIT1=4'd3, BIT2=4'd4,
+                 BIT3=4'd5, BIT4=4'd6, BIT5=4'd7, BIT6=4'd8, BIT7=4'd9,
+                 PAR=4'd10, STOP=4'd11, STOP2=4'd12;
+reg [3:0] CState, NState; // 908
 reg iTx2; // 612
 reg iSout; // 612
 reg iParity; // 612

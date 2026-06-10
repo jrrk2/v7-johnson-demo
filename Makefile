@@ -43,7 +43,6 @@ endif
 NEXTPNR_DIR    := $(DEPS)/nextpnr-xilinx
 PRJXRAY_DIR    := $(DEPS)/prjxray
 OPENFLD_DIR    := $(DEPS)/openFPGALoader
-SVS_DIR        := $(DEPS)/System-Verilog-suite
 
 # Device database (segbits/tilegrid) AND the derived chipdb now come from
 # ONE synchronized openXC7/database-virtex7 release, so they can never drift
@@ -67,8 +66,12 @@ PRJXRAY_DB_OK  := $(PRJXRAY_DIR)/database/virtex7/xc7vx485tffg1761-2/part.yaml
 
 # Cargo of tool binaries the demo step consumes.
 NEXTPNR_BIN    := $(NEXTPNR_DIR)/build/nextpnr-xilinx
-SVS_BIN        := $(SVS_DIR)/_build/default/sv_suite.exe
 OFL_BIN        := $(OPENFLD_DIR)/build/openFPGALoader
+# Stock yosys (no plugin) synthesises all three demos straight from
+# (System)Verilog — installed by `make deps`, not built here.  Override to your
+# install; auto-discovers oss-cad-suite / an OpenROAD build / PATH.
+YOSYS          ?= $(firstword $(wildcard $(HOME)/oss-cad-suite/bin/yosys \
+                    $(HOME)/OpenROAD-flow-scripts/tools/install/yosys/bin/yosys) yosys)
 FASM2FRAMES    := $(PRJXRAY_DIR)/utils/fasm2frames.py
 FRAMES2BIT     := $(PRJXRAY_DIR)/build/tools/xc7frames2bit
 PRJXRAY_DB     := $(PRJXRAY_DIR)/database/virtex7
@@ -94,7 +97,6 @@ DEMO_BIT       := $(DEMO)/counter28.bit
 DEMO_FASM      := $(DEMO)/counter28.fasm
 DEMO_FRAMES    := $(DEMO)/counter28.frames
 DEMO_JSON      := $(DEMO)/top.json
-DEMO_RECIPE    := $(DEMO)/recipe.lua
 
 # Second example: the telegraph (repeating bit-banged UART).  Same flow,
 # its own source directory + artefacts.
@@ -103,7 +105,6 @@ TG_BIT         := $(TG_DIR)/telegraph.bit
 TG_FASM        := $(TG_DIR)/telegraph.fasm
 TG_FRAMES      := $(TG_DIR)/telegraph.frames
 TG_JSON        := $(TG_DIR)/top.json
-TG_RECIPE      := $(TG_DIR)/recipe.lua
 
 
 # ─── high-level targets ────────────────────────────────────────────────
@@ -124,7 +125,7 @@ all: $(DEMO_BIT)
 help:
 	@sed -n 's/^# //p; /^\.PHONY/q' $(firstword $(MAKEFILE_LIST))
 
-tools: $(NEXTPNR_BIN) $(SVS_BIN) $(OFL_BIN) $(FRAMES2BIT) $(CHIPDB) $(PRJXRAY_DB_OK)
+tools: $(NEXTPNR_BIN) $(OFL_BIN) $(FRAMES2BIT) $(CHIPDB) $(PRJXRAY_DB_OK)
 	@echo "All tools built and chipdb + prjxray DB fetched."
 
 johnson.bit: $(DEMO_BIT)
@@ -257,16 +258,11 @@ $(OFL_BIN): $(DEPS)/.initialised
 	cmake --build $(OPENFLD_DIR)/build -j$$(getconf _NPROCESSORS_ONLN)
 
 
-# ─── System-Verilog-suite (OCaml + dune + hardcaml) ────────────────────
+# ─── demo build (johnson) — stock yosys, no Vivado/SVS ─────────────────
 
-$(SVS_BIN): $(DEPS)/.initialised
-	cd $(SVS_DIR) && dune build sv_suite.exe
-
-
-# ─── demo build ────────────────────────────────────────────────────────
-
-$(DEMO_JSON): $(SVS_BIN) $(DEMO_RECIPE) | $(SVS_DIR)
-	cd $(DEMO) && $(SVS_BIN) script $(DEMO_RECIPE) $(SVS_DIR)
+$(DEMO_JSON): $(DEMO)/top.v $(DEMO)/counter25_core.v
+	cd $(DEMO) && $(YOSYS) -p "read_verilog -sv top.v counter25_core.v; \
+	    hierarchy -top top; synth_xilinx -flatten -family xc7; write_json $(DEMO_JSON)"
 
 $(DEMO_FASM): $(DEMO_JSON) $(NEXTPNR_BIN) $(CHIPDB)
 	cd $(DEMO) && \
@@ -289,8 +285,9 @@ $(DEMO_BIT): $(DEMO_FRAMES) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
 
 # ─── telegraph build (same pipeline, separate sources) ─────────────────
 
-$(TG_JSON): $(SVS_BIN) $(TG_RECIPE) $(TG_DIR)/telegraph_core.v $(TG_DIR)/top.v | $(SVS_DIR)
-	cd $(TG_DIR) && $(SVS_BIN) script $(TG_RECIPE) $(SVS_DIR)
+$(TG_JSON): $(TG_DIR)/top.v $(TG_DIR)/telegraph_core.v
+	cd $(TG_DIR) && $(YOSYS) -p "read_verilog -sv top.v telegraph_core.v; \
+	    hierarchy -top top; synth_xilinx -flatten -family xc7; write_json $(TG_JSON)"
 
 # router1 now sources GND/VCC from the nearest local pseudo-constant wire
 # (the Vivado-style distributed-constant routing ported from router2).  The
@@ -408,7 +405,7 @@ clean:
 	    $(TG_BIT) $(TG_FRAMES) $(TG_FASM) $(TG_JSON) $(TG_DIR)/top.edif \
 	    $(CALC_BIT) $(CALC_FRAMES) $(CALC_FASM) $(CALC_JSON)
 	rm -rf $(NEXTPNR_DIR)/build $(PRJXRAY_DIR)/build \
-	    $(OPENFLD_DIR)/build $(SVS_DIR)/_build $(PRJXRAY_VENV)
+	    $(OPENFLD_DIR)/build $(PRJXRAY_VENV)
 
 distclean: clean
 	rm -f $(CHIPDB) $(DEPS)/.initialised

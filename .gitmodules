@@ -9,6 +9,3 @@
 [submodule "deps/openFPGALoader"]
 	path = deps/openFPGALoader
 	url = https://github.com/trabucayre/openFPGALoader.git
-[submodule "deps/System-Verilog-suite"]
-	path = deps/System-Verilog-suite
-	url = https://github.com/jrrk2/System-Verilog-suite.git
