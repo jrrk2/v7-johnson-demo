@@ -6,7 +6,9 @@
 # Output: /tmp/picosoc_open.bit
 # env: SEED (default 1), FREQ (default 200)
 set -u
-ROOT=/home/jonathan/v7-johnson-demo
+# Repo root = the parent of this script's dir (picosoc/), so the build works
+# from any checkout on Linux or macOS -- no hardcoded paths.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NEXTPNR=$ROOT/deps/nextpnr-xilinx/build/nextpnr-xilinx
 CHIPDB=$ROOT/deps/nextpnr-xilinx/xilinx/xc7vx485t.bin
 PXPY=$ROOT/deps/prjxray/env/bin/python
@@ -16,15 +18,22 @@ PXDB=$ROOT/deps/prjxray/database/virtex7
 PART=xc7vx485tffg1761-2
 YOSYS=$(ls $HOME/oss-cad-suite/bin/yosys $HOME/OpenROAD-flow-scripts/tools/install/yosys/bin/yosys 2>/dev/null | head -1)
 YOSYS=${YOSYS:-yosys}
+# RISC-V toolchain: brew's riscv tap is riscv64-unknown-elf-*; some installs use
+# riscv64-elf-*.  Override RISCV_PREFIX if yours differs.
+RISCV_PREFIX=${RISCV_PREFIX:-$(for p in riscv64-unknown-elf riscv64-elf riscv-none-elf; do command -v $p-gcc >/dev/null 2>&1 && { echo $p; break; }; done)}
+RISCV_PREFIX=${RISCV_PREFIX:-riscv64-unknown-elf}
+# flock serialises concurrent nextpnr runs (shared chipdb); it's Linux-only and
+# unnecessary for a single build, so use it only when present (skip on macOS).
+if command -v flock >/dev/null 2>&1; then LOCK="flock /tmp/nextpnr.lock"; else LOCK=""; fi
 SEED=${SEED:-1}
 FREQ=${FREQ:-100}
 cd $ROOT/picosoc
 say(){ echo "===== $* ====="; }
 
-say "1/6 firmware (rv32i, clkdiv 867 = 115200 @ 100 MHz)"
-riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Os -ffreestanding -nostdlib \
+say "1/6 firmware (rv32i, clkdiv 216 = 115200 @ 25 MHz MMCM cpu_clk)"
+${RISCV_PREFIX}-gcc -march=rv32i -mabi=ilp32 -Os -ffreestanding -nostdlib \
   -o firmware.elf -Wl,-Bstatic,-T,sections.lds,--strip-debug start.s firmware.c || exit 1
-riscv64-unknown-elf-objcopy -O binary firmware.elf firmware.bin
+${RISCV_PREFIX}-objcopy -O binary firmware.elf firmware.bin
 python3 bin2verilog.py firmware.bin > progmem.v || exit 1
 
 say "2/6 yosys synth_xilinx"
@@ -34,7 +43,7 @@ $YOSYS -p "read_verilog -sv vc707_picosoc.v picosoc_noflash.v picorv32.v simpleu
 grep -E "^\s+[0-9]+\s+RAMB36E1" /tmp/picosoc_synth.log | tail -1
 
 say "3/6 nextpnr-xilinx (router2, seed $SEED, flock-serialized, $FREQ MHz)"
-flock /tmp/nextpnr.lock env NEXTPNR_ARC_MAX_VISIT=2000000 \
+$LOCK env NEXTPNR_ARC_MAX_VISIT=2000000 \
   $NEXTPNR --router router2 --seed $SEED --chipdb $CHIPDB --xdc vc707_picosoc.xdc \
     --json /tmp/picosoc_open.json --fasm /tmp/picosoc_open.fasm --freq $FREQ \
     >/tmp/picosoc_npnr.log 2>&1

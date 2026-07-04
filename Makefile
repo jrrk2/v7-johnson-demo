@@ -8,6 +8,7 @@
 #   make deps           install OS packages (sudo apt / brew)
 #   make tools          build all in-tree tools (no flashing, no install)
 #   make johnson.bit    just the demo bit (assumes tools are already built)
+#   make picosoc        build the open-flow PicoSoC bit (needs riscv-gcc)
 #   make flash          flash the latest bit to the VC707 over JTAG
 #   make clean          remove all build artefacts (keeps cloned deps)
 #   make distclean      also remove cloned deps + chipdb (start over)
@@ -109,7 +110,7 @@ TG_JSON        := $(TG_DIR)/top.json
 
 # ─── high-level targets ────────────────────────────────────────────────
 
-.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash clean distclean help
+.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help
 
 # Keep intermediates even if a recipe exits non-zero (the telegraph route
 # step does, on its skipped don't-care CARRY4.S arcs + timing miss; the calc
@@ -395,6 +396,24 @@ $(CALC_BIT): $(CALC_FRAMES) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
 
 calc-flash: $(CALC_BIT) | $(OFL_BIN)
 	$(OFL_BIN) --cable digilent --freq 15000000 $(CALC_BIT)
+
+
+# ─── picosoc (open-flow soft SoC: picorv32 + UART + BRAM, NO Vivado) ─────
+# Driven by picosoc/build_open.sh (riscv-gcc firmware -> yosys -> nextpnr ->
+# prjxray -> bit).  Needs a RISC-V bare-metal gcc for the firmware:
+#   macOS:  brew install riscv-gnu-toolchain   (or riscv64-elf-gcc)
+#   Linux:  apt install gcc-riscv64-unknown-elf (or your distro's rv32 gcc)
+# Output: /tmp/picosoc_open.bit .  Override SEED / FREQ / RISCV_PREFIX as needed.
+PICOSOC_BIT := /tmp/picosoc_open.bit
+
+picosoc: $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) | $(PRJXRAY_STAMP)
+	@command -v $${RISCV_PREFIX:-riscv64-unknown-elf}-gcc >/dev/null 2>&1 || command -v riscv64-elf-gcc >/dev/null 2>&1 || { \
+	   echo "No RISC-V gcc found -- install one (see the picosoc comment in the Makefile)." >&2; exit 1; }
+	cd picosoc && YOSYS='$(YOSYS)' bash build_open.sh
+	@echo "PicoSoC bit: $(PICOSOC_BIT)  (flash: make picosoc-flash)"
+
+picosoc-flash: | $(OFL_BIN)
+	$(OFL_BIN) --cable digilent --freq 15000000 $(PICOSOC_BIT)
 
 
 # ─── clean ─────────────────────────────────────────────────────────────

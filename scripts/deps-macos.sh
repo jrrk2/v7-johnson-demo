@@ -26,4 +26,17 @@ brew install \
 # no yosys plugin.  brew's yosys works; for a newer one install oss-cad-suite
 # and point YOSYS at it.
 
+# The picosoc demo (`make picosoc`) also needs a RISC-V bare-metal gcc for its
+# firmware.  The brew formula / tap varies and can be a long source build, so
+# it is not installed here automatically -- any of riscv64-unknown-elf /
+# riscv64-elf / riscv-none-elf gcc works (build_open.sh auto-detects; override
+# RISCV_PREFIX otherwise).  A common choice:
+#   brew tap riscv-software-src/riscv && brew install riscv-gnu-toolchain
+if ! command -v riscv64-unknown-elf-gcc >/dev/null 2>&1 && \
+   ! command -v riscv64-elf-gcc >/dev/null 2>&1 && \
+   ! command -v riscv-none-elf-gcc >/dev/null 2>&1; then
+    echo "NOTE: 'make picosoc' needs a RISC-V bare-metal gcc -- none found."
+    echo "      e.g.  brew tap riscv-software-src/riscv && brew install riscv-gnu-toolchain"
+fi
+
 echo "macOS deps installed."
