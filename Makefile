@@ -266,7 +266,7 @@ $(DEMO_JSON): $(DEMO)/top.v $(DEMO)/counter25_core.v
 
 $(DEMO_FASM): $(DEMO_JSON) $(NEXTPNR_BIN) $(CHIPDB)
 	cd $(DEMO) && \
-	    NEXTPNR_ARC_MAX_VISIT=2000000 NEXTPNR_SKIP_FAILED_ARCS=1 \
+	    NEXTPNR_ARC_MAX_VISIT=2000000 \
 	    $(NEXTPNR_BIN) --router router1 \
 	        --chipdb $(CHIPDB) --xdc top.xdc \
 	        --json $(DEMO_JSON) --fasm $@ --freq 200
@@ -301,7 +301,7 @@ $(TG_JSON): $(TG_DIR)/top.v $(TG_DIR)/telegraph_core.v
 # and let the pipeline continue.
 $(TG_FASM): $(TG_JSON) $(NEXTPNR_BIN) $(CHIPDB)
 	-cd $(TG_DIR) && \
-	    NEXTPNR_ARC_MAX_VISIT=2000000 NEXTPNR_SKIP_FAILED_ARCS=1 \
+	    NEXTPNR_ARC_MAX_VISIT=2000000 \
 	    $(NEXTPNR_BIN) --router router1 \
 	        --chipdb $(CHIPDB) --xdc top.xdc \
 	        --json $(TG_JSON) --fasm $@ --freq 200
@@ -365,7 +365,7 @@ $(CALC_JSON): $(CALC_DEPS)
 $(CALC_FASM): $(CALC_JSON) $(CALC_DIR)/$(CALC_XDC) $(NEXTPNR_BIN) $(CHIPDB)
 	@cd $(CALC_DIR) && best=0; bestfasm=; rm -f $@; \
 	for s in $(CALC_SEEDS); do \
-	  flock /tmp/nextpnr.lock env NEXTPNR_ARC_MAX_VISIT=2000000 NEXTPNR_SKIP_FAILED_ARCS=1 \
+	  flock /tmp/nextpnr.lock env NEXTPNR_ARC_MAX_VISIT=2000000 \
 	    $(NEXTPNR_BIN) --router router2 --seed $$s --chipdb $(CHIPDB) --xdc $(CALC_XDC) \
 	      --json $(CALC_JSON) --fasm $@.s$$s --freq $(CALC_FREQ) >$@.s$$s.log 2>&1; \
 	  f=$$(grep -i "Max frequency for clock 'clk'" $@.s$$s.log | tail -1 | grep -oE "[0-9]+\.[0-9]+" | head -1); \

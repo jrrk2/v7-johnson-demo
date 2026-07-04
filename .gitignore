@@ -56,3 +56,21 @@ uartram/uartram_calc.bit
 
 # SVS-native synthesis work moved to jrrk2/System-Verilog-suite (separate repo).
 deps/System-Verilog-suite/
+
+# --- rebuildable / Vivado artefacts across all designs (open flow needs none) ---
+# Vivado golden-reference checkpoints, EDIF exports, reports, bit dumps.
+*.dcp
+*.dcp.edf/
+*.bits
+*.rpt
+*.opendcp.xml
+*.opendcp.edif
+# compiled firmware (regenerated from the .c/.s sources via the build scripts).
+firmware.bin
+firmware.elf
+# generated netlists / IP (yosys JSON, per-seed nextpnr scratch, IP gen).
+**/top.json
+**/*_open.json
+**/*_calc.json
+*.fasm.s*
+ethsoc/ip/gen/

@@ -34,6 +34,7 @@
 module picosoc_noflash (
 	input clk,
 	input resetn,
+	input [31:0] progaddr_reset_i,
 
 	output        iomem_valid,
 	input         iomem_ready,
@@ -47,7 +48,15 @@ module picosoc_noflash (
 	input  irq_7,
 
 	output ser_tx,
-	input  ser_rx
+	input  ser_rx,
+
+	// ---- CPU memory-bus debug taps (open-flow JTAG observability) ----
+	output        dbg_mem_valid,
+	output        dbg_mem_ready,
+	output        dbg_mem_instr,
+	output [31:0] dbg_mem_addr,
+	output        dbg_progmem_ready,
+	output [31:0] dbg_reg_pc
 );
 	parameter integer MEM_WORDS = 4096;
 	parameter [31:0] STACKADDR = (4*MEM_WORDS);       // end of memory
@@ -79,6 +88,12 @@ module picosoc_noflash (
 
 	reg ram_ready;
 	wire [31:0] ram_rdata;
+
+	assign dbg_mem_valid = mem_valid;
+	assign dbg_mem_ready = mem_ready;
+	assign dbg_mem_instr = mem_instr;
+	assign dbg_mem_addr  = mem_addr;
+	assign dbg_progmem_ready = progmem_ready;
 
 	assign iomem_valid = mem_valid && (mem_addr[31:24] > 8'h 01);
 	assign iomem_wstrb = mem_wstrb;
@@ -131,6 +146,8 @@ module picosoc_noflash (
 	) cpu (
 		.clk         (clk        ),
 		.resetn      (resetn     ),
+		.progaddr_reset_i (progaddr_reset_i),
+		.dbg_reg_pc       (dbg_reg_pc),
 		.mem_valid   (mem_valid  ),
 		.mem_instr   (mem_instr  ),
 		.mem_ready   (mem_ready  ),
@@ -234,7 +251,7 @@ module picosoc_regs (
 	output [31:0] rdata1,
 	output [31:0] rdata2
 );
-	(* ram_style = "distributed" *) reg [31:0] regs [0:31];
+	(* ram_style = "registers" *) reg [31:0] regs [0:31];
 
 	always @(posedge clk)
 		if (wen) regs[waddr[4:0]] <= wdata;
@@ -250,15 +267,28 @@ module picosoc_mem #(
 	input [3:0] wen,
 	input [21:0] addr,
 	input [31:0] wdata,
-	output reg [31:0] rdata
+	output [31:0] rdata
 );
-	(* ram_style = "block" *) reg [31:0] mem [0:WORDS-1];
-
-	always @(posedge clk) begin
-		rdata <= mem[addr];
-		if (wen[0]) mem[addr][ 7: 0] <= wdata[ 7: 0];
-		if (wen[1]) mem[addr][15: 8] <= wdata[15: 8];
-		if (wen[2]) mem[addr][23:16] <= wdata[23:16];
-		if (wen[3]) mem[addr][31:24] <= wdata[31:24];
-	end
+	// Bit-sliced single-port RAMB18E1 in width-1 mode, the validated open-flow
+	// RAMB pattern.  One width-1 BRAM per data bit; byte write-enables via
+	// per-bit WE = wen[bit/8].  16384x1 each (WORDS<=16384, addr[13:0]).
+	// (Was RAMB16_S1; the regenerated nextpnr chipdb dropped that compat bel,
+	// and RAMB18E1 is the natively supported primitive in both flows.)
+	wire [13:0] a = addr[13:0];
+	genvar i;
+	generate for (i = 0; i < 32; i = i + 1) begin : membit
+		wire [15:0] doa;
+		RAMB18E1 #(
+			.READ_WIDTH_A(1), .WRITE_WIDTH_A(1), .WRITE_MODE_A("WRITE_FIRST")
+		) ram (
+			.CLKARDCLK(clk), .ENARDEN(1'b1),
+			.REGCEAREGCE(1'b0), .RSTRAMARSTRAM(1'b0), .RSTREGARSTREG(1'b0),
+			.WEA({2{wen[i/8]}}),
+			.ADDRARDADDR(a), .DIADI({15'b0, wdata[i]}), .DIPADIP(2'b0),
+			.DOADO(doa),
+			.CLKBWRCLK(1'b0), .ENBWREN(1'b0), .REGCEB(1'b0),
+			.RSTRAMB(1'b0), .RSTREGB(1'b0), .WEBWE(4'b0),
+			.ADDRBWRADDR(14'b0), .DIBDI(16'b0), .DIPBDIP(2'b0));
+		assign rdata[i] = doa[0];
+	end endgenerate
 endmodule

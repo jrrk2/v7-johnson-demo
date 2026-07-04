@@ -88,6 +88,8 @@ module picorv32 #(
 	parameter [31:0] STACKADDR = 32'h ffff_ffff
 ) (
 	input clk, resetn,
+	input [31:0] progaddr_reset_i,
+	output [31:0] dbg_reg_pc,
 	output reg trap,
 
 	output reg        mem_valid,
@@ -174,6 +176,7 @@ module picorv32 #(
 
 	reg [63:0] count_cycle, count_instr;
 	reg [31:0] reg_pc, reg_next_pc, reg_op1, reg_op2, reg_out;
+	assign dbg_reg_pc = reg_pc;
 	reg [4:0] reg_sh;
 
 	reg [31:0] next_insn_opcode;
@@ -1455,8 +1458,8 @@ module picorv32 #(
 			trace_data <= 'bx;
 
 		if (!resetn) begin
-			reg_pc <= PROGADDR_RESET;
-			reg_next_pc <= PROGADDR_RESET;
+			reg_pc <= progaddr_reset_i;
+			reg_next_pc <= progaddr_reset_i;
 			if (ENABLE_COUNTERS)
 				count_instr <= 0;
 			latched_store <= 0;

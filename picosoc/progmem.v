@@ -129,7 +129,7 @@ module progmem (
       12'h066: mem_data <= 32'h03000737;
       12'h067: mem_data <= 32'h00100793;
       12'h068: mem_data <= 32'h00f72023;
-      12'h069: mem_data <= 32'h36300693;
+      12'h069: mem_data <= 32'h0d800693;
       12'h06a: mem_data <= 32'h020007b7;
       12'h06b: mem_data <= 32'h00d7a223;
       12'h06c: mem_data <= 32'h0aa00793;
@@ -174,12 +174,12 @@ module progmem (
       12'h093: mem_data <= 32'h6e6f2065;
       12'h094: mem_data <= 32'h37435620;
       12'h095: mem_data <= 32'h40203730;
-      12'h096: mem_data <= 32'h30303120;
-      12'h097: mem_data <= 32'h7a484d20;
-      12'h098: mem_data <= 32'h706f2820;
-      12'h099: mem_data <= 32'h66206e65;
-      12'h09a: mem_data <= 32'h29776f6c;
-      12'h09b: mem_data <= 32'h00000a0d;
+      12'h096: mem_data <= 32'h20353220;
+      12'h097: mem_data <= 32'h207a484d;
+      12'h098: mem_data <= 32'h65706f28;
+      12'h099: mem_data <= 32'h6c66206e;
+      12'h09a: mem_data <= 32'h0d29776f;
+      12'h09b: mem_data <= 32'h0000000a;
       default: mem_data <= 32'h00000000;
     endcase
   end
