@@ -1,7 +1,12 @@
 // VC707 PicoSoC + lowRISC SGMII ethernet (framing_top_sgmii).
-// Clocks: 200 MHz LVDS sysclk -> /2 = 100 MHz cpu_clk (msoc_clk),
-//         -> /4 = 50 MHz independent clock for the PCS/PMA IP (its
-//         DrpClkRate is 50.0); 125 MHz MAC clock comes out of the IP.
+// Clocks: 200 MHz LVDS sysclk -> MMCME2_ADV -> 50 MHz cpu_clk (= msoc_clk
+//         = the IP's independent clock; DrpClkRate is 50.0, and cva6 ran
+//         the framing core at 50 MHz).  An MMCM rather than fabric FF
+//         dividers: derived clocks ride the dedicated low-skew tree with
+//         phase compensation, avoiding the divider-clock hold/skew issues
+//         seen in STA (and Vivado-verified Fmax of the nextpnr placement
+//         is ~73 MHz, so 100 MHz cpu_clk is out for now anyway).
+//         125 MHz MAC clock comes out of the PCS/PMA IP's own MMCM.
 // Memory map: 0x0300_0000 gpio/LEDs, 0x0300_0004 pcspma_status (RO),
 //             0x0400_0000..0x0401_FFFF ethernet (framing_top, 17-bit).
 // eth_irq -> picorv32 irq[5].
@@ -23,20 +28,64 @@ module top (
         sysclk_ibufds (.I(clk_p), .IB(clk_n), .O(sysclk_ibuf));
     BUFG sysclk_bufg (.I(sysclk_ibuf), .O(sysclk));
 
-    reg clkdiv2 = 1'b0;
-    reg [1:0] clkdiv4 = 2'b0;
-    always @(posedge sysclk) begin
-        clkdiv2 <= ~clkdiv2;
-        clkdiv4 <= clkdiv4 + 1'b1;
-    end
-    BUFG cpu_bufg (.I(clkdiv2), .O(cpu_clk));
-    BUFG eth_bufg (.I(clkdiv4[1]), .O(eth_int_clk));
+`ifdef CLK125
+    // Single 125 MHz domain: cpu/msoc = userclk2 from the PCS/PMA IP's MMCM;
+    // the IP's independent clock = gtrefclk through the IP's BUFG (free-
+    // running from the PHY crystal).  The IP is reset by the button alone -
+    // the POR counter runs on userclk2, which only ticks once the GT and
+    // its MMCM are up, so it naturally waits for the clock lineage.
+    wire eth_clk_o, gtrefclk_bufg_o;
+    assign cpu_clk = eth_clk_o;
+    // independent_clock must NOT derive from the GT refclk (UG476 DRC
+    // REQP-1584: it feeds the PLL lock detectors).  Derive 50 MHz from
+    // sysclk via an MMCM: compensated and BUFG-driven end to end -- a
+    // fabric ripple divider clocked by the unbuffered IBUFDS output has
+    // hold hazards once the open flow routes it.
+    // 200 MHz x5 = 1 GHz VCO; /20 = 50 MHz.
+    wire mmcm_fb, mmcm_clkout0, mmcm_locked;
+    MMCME2_ADV #(
+        .BANDWIDTH("OPTIMIZED"), .COMPENSATION("ZHOLD"),
+        .CLKIN1_PERIOD(5.000), .DIVCLK_DIVIDE(1),
+        .CLKFBOUT_MULT_F(5.000), .CLKFBOUT_PHASE(0.0),
+        .CLKOUT0_DIVIDE_F(20.000), .CLKOUT0_PHASE(0.0),
+        .CLKOUT0_DUTY_CYCLE(0.5)
+    ) eth_mmcm (
+        .CLKIN1(sysclk), .CLKIN2(1'b0), .CLKINSEL(1'b1),
+        .CLKFBIN(mmcm_fb), .CLKFBOUT(mmcm_fb),
+        .CLKOUT0(mmcm_clkout0),
+        .RST(rst), .PWRDWN(1'b0), .LOCKED(mmcm_locked),
+        .DADDR(7'b0), .DCLK(1'b0), .DEN(1'b0), .DI(16'b0), .DWE(1'b0),
+        .PSCLK(1'b0), .PSEN(1'b0), .PSINCDEC(1'b0)
+    );
+    BUFG eth_bufg (.I(mmcm_clkout0), .O(eth_int_clk));
+`else
+
+    // 200 MHz x5 = 1 GHz VCO; /20 = 50 MHz
+    wire mmcm_fb, mmcm_clkout0, mmcm_locked;
+    MMCME2_ADV #(
+        .BANDWIDTH("OPTIMIZED"), .COMPENSATION("ZHOLD"),
+        .CLKIN1_PERIOD(5.000), .DIVCLK_DIVIDE(1),
+        .CLKFBOUT_MULT_F(5.000), .CLKFBOUT_PHASE(0.0),
+        .CLKOUT0_DIVIDE_F(20.000), .CLKOUT0_PHASE(0.0),
+        .CLKOUT0_DUTY_CYCLE(0.5)
+    ) cpu_mmcm (
+        .CLKIN1(sysclk), .CLKIN2(1'b0), .CLKINSEL(1'b1),
+        .CLKFBIN(mmcm_fb), .CLKFBOUT(mmcm_fb),
+        .CLKOUT0(mmcm_clkout0),
+        .RST(rst), .PWRDWN(1'b0), .LOCKED(mmcm_locked),
+        .DADDR(7'b0), .DCLK(1'b0), .DEN(1'b0), .DI(16'b0), .DWE(1'b0),
+        .PSCLK(1'b0), .PSEN(1'b0), .PSINCDEC(1'b0)
+    );
+    BUFG cpu_bufg (.I(mmcm_clkout0), .O(cpu_clk));
+    assign eth_int_clk = cpu_clk;   // one 50 MHz domain for SoC + IP
+    wire eth_clk_o, gtrefclk_bufg_o;   // unused in MMCM mode
+`endif
 
     reg [5:0] resetn_cnt = 0;
     wire resetn = &resetn_cnt;
     always @(posedge cpu_clk)
-        if (rst) resetn_cnt <= 0;
-        else     resetn_cnt <= resetn_cnt + !resetn;
+        if (rst || !mmcm_locked) resetn_cnt <= 0;
+        else                     resetn_cnt <= resetn_cnt + !resetn;
 
     // MDIO tristate
     wire phy_mdio_i, phy_mdio_o, phy_mdio_oe;
@@ -57,7 +106,38 @@ module top (
     wire [31:0] iomem_addr, iomem_wdata;
     reg  [31:0] iomem_rdata;
     reg  [31:0] gpio;
+
+    // JTAG USER1 debug register: read SoC liveness + PCS/PMA status over
+    // the programming cable, independent of UART/pins.  Shift 32 bits out
+    // of USER1: {hb[1:0], mmcm_locked, resetn, gpio[3:0], status[15:0],
+    // 8'hA5}.  The 0xA5 signature shifts out first and proves the chain.
+    wire bs_capture, bs_drck, bs_sel, bs_shift, bs_tdi;
+    reg [31:0] bs_sr;
+    reg [25:0] bs_hb;
+    always @(posedge cpu_clk) bs_hb <= bs_hb + 1;
+    BSCANE2 #(.JTAG_CHAIN(1)) bscan (
+        .CAPTURE(bs_capture), .DRCK(bs_drck), .RESET(), .RUNTEST(),
+        .SEL(bs_sel), .SHIFT(bs_shift), .TCK(), .TDI(bs_tdi),
+        .TDO(bs_sr[0]), .TMS(), .UPDATE());
+    always @(posedge bs_drck)
+        if (bs_sel && bs_capture)
+            bs_sr <= {bs_hb[25:24], mmcm_locked, resetn, gpio[3:0], status_sync1, 8'hA5};
+        else if (bs_sel && bs_shift)
+            bs_sr <= {bs_tdi, bs_sr[31:1]};
+
+`ifdef LED_DEBUG
+    // Bypass diagnostics: LD7=MMCM locked, LD6=resetn, LD5/4=cpu_clk
+    // heartbeats, LD3=eth_clk-domain heartbeat (via framing's pcspma sync
+    // clock domain n/a - use eth_int), LD2=iomem_valid flicker.
+    reg [25:0] hb_cpu = 0;
+    always @(posedge cpu_clk) hb_cpu <= hb_cpu + 1;
+    reg [25:0] hb_eth = 0;
+    always @(posedge eth_int_clk) hb_eth <= hb_eth + 1;
+    assign led = {mmcm_locked, resetn, hb_cpu[25], hb_cpu[24],
+                  iomem_valid, hb_eth[25], hb_eth[24], gpio[0]};
+`else
     assign led = gpio[7:0];
+`endif
 
     wire gpio_sel = iomem_valid && iomem_addr[31:24] == 8'h03;
     wire eth_sel  = iomem_valid && iomem_addr[31:24] == 8'h04;
@@ -127,7 +207,11 @@ module top (
         .framing_sel    (eth_ce),
         .framing_rdata  (framing_rdata),
         .clk_int        (eth_int_clk),
+`ifdef CLK125
+        .rst_int        (rst),
+`else
         .rst_int        (!resetn),
+`endif
         .sgmii_rxp      (sgmii_rxp),
         .sgmii_rxn      (sgmii_rxn),
         .sgmii_txp      (sgmii_txp),
@@ -140,7 +224,9 @@ module top (
         .phy_mdio_oe    (phy_mdio_oe),
         .phy_mdc        (eth_mdc),
         .eth_irq        (eth_irq),
-        .pcspma_status_o(pcspma_status)
+        .pcspma_status_o(pcspma_status),
+        .eth_clk_o      (eth_clk_o),
+        .gtrefclk_bufg_o(gtrefclk_bufg_o)
     );
 
     picosoc_noflash soc (

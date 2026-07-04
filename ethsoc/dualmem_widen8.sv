@@ -62,7 +62,11 @@ module dualmem_widen8 #(
      end
 
    generate for (r = 0; r < NBRAMS; r=r+1)
+`ifdef YOSYS
+     RAMB16_S9_S36_xc7
+`else
      RAMB16_S9_S36
+`endif
      RAMB16_S9_S36_inst
        (
         .CLKA   ( clka                     ),     // Port A Clock

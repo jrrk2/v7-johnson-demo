@@ -32,7 +32,11 @@ module dualmem_widen(clka, clkb, dina, dinb, addra, addrb, wea, web, douta, dout
 `ifdef RAMB16
    
    generate for (r = 0; r < 2; r=r+1)
+`ifdef YOSYS
+     RAMB16_S9_S36_xc7
+`else
      RAMB16_S9_S36
+`endif
      RAMB16_S9_S36_inst
        (
         .CLKA   ( clka                     ),     // Port A Clock

@@ -359,6 +359,9 @@ end
 `ifdef SIMULATION
 // "AUTO" style is "REDUCTION" for faster simulation
 parameter STYLE_INT = (STYLE == "AUTO") ? "REDUCTION" : STYLE;
+// yosys does not honour translate_off, so the define above leaks into
+// every subsequently-read file; contain it here.
+`undef SIMULATION
 `else
 // "AUTO" style is "LOOP" for better synthesis result
 parameter STYLE_INT = (STYLE == "AUTO") ? "LOOP" : STYLE;

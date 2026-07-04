@@ -55,7 +55,10 @@ module sgmii_soc (
     output wire [31:0]  tx_fcs_reg,
 
     // PCS/PMA status (for debug)
-    output wire [15:0]  pcspma_status
+    output wire [15:0]  pcspma_status,
+
+    // 125 MHz free-running refclk through the IP's BUFG (for CLK125 mode)
+    output wire         gtrefclk_bufg_out
 );
 
     // ================================================================
@@ -88,7 +91,7 @@ module sgmii_soc (
         .gtrefclk_p             (sgmii_refclk_p),
         .gtrefclk_n             (sgmii_refclk_n),
         .gtrefclk_out           (),
-        .gtrefclk_bufg_out      (),
+        .gtrefclk_bufg_out      (gtrefclk_bufg_out),
         .txp                    (sgmii_txp),
         .txn                    (sgmii_txn),
         .rxp                    (sgmii_rxp),

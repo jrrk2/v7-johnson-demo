@@ -33,7 +33,9 @@ module framing_top_sgmii
   output wire         phy_mdc,
 
   output reg          eth_irq,
-  output wire [15:0]  pcspma_status_o
+  output wire [15:0]  pcspma_status_o,
+  output wire         eth_clk_o,
+  output wire         gtrefclk_bufg_o
    );
 
 logic       phy_mdclk;
@@ -41,6 +43,7 @@ assign phy_mdc = phy_mdclk;
 
 // 125 MHz MAC clock from PCS/PMA IP (via sgmii_soc)
 wire        eth_clk;
+assign eth_clk_o = eth_clk;
 
 logic [16:0] core_lsu_addr_dly;
 
@@ -337,7 +340,8 @@ sgmii_soc sgmii_soc1
    .rx_axis_tuser(rx_axis_tuser),
    .rx_fcs_reg(rx_fcs_reg),
    .tx_fcs_reg(tx_fcs_reg),
-   .pcspma_status(pcspma_status)
+   .pcspma_status(pcspma_status),
+   .gtrefclk_bufg_out(gtrefclk_bufg_o)
 );
 
 assign pcspma_status_o = pcspma_status;

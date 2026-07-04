@@ -175,14 +175,14 @@ static uint16_t mdio_read(int phy, int reg) {
 
 void main(void) {
     reg_leds = 1;
-    reg_uart_clkdiv = 867;     // 115200 @ 100 MHz
+    reg_uart_clkdiv = 434;      // 115200 @ 50 MHz (single-domain MMCM build)
     reg_leds = 3;
     print("\r\nethsoc M2: ARP + ICMP echo at 192.168.0.51\r\n");
 
     eth_init(my_mac);
 
     // one-shot MDIO diagnostic (non-blocking for the data path)
-    for (volatile int i = 0; i < 2000000; i++) ;
+    for (volatile int i = 0; i < 2500000; i++) ;
     int phy_found = 0;
     for (int a = 0; a < 32 && !phy_found; a++) {
         uint16_t id = mdio_read(a, 2);
