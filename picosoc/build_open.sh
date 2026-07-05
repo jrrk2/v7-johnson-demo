@@ -4,7 +4,8 @@
 #   riscv-gcc firmware -> progmem.v -> yosys synth_xilinx -> nextpnr-xilinx
 #   -> fasm -> fasm2frames -> rx IOB patch (AU33 prjxray gap) -> bit
 # Output: /tmp/picosoc_open.bit
-# env: SEED (default 1), FREQ (default 200)
+# env: SEED (default: sweep until routed), FREQ (default 25 = the real MMCM
+#      cpu_clk; a higher --freq over-constrains and stresses the router).
 set -u
 # Repo root = the parent of this script's dir (picosoc/), so the build works
 # from any checkout on Linux or macOS -- no hardcoded paths.
@@ -25,8 +26,16 @@ RISCV_PREFIX=${RISCV_PREFIX:-riscv64-unknown-elf}
 # flock serialises concurrent nextpnr runs (shared chipdb); it's Linux-only and
 # unnecessary for a single build, so use it only when present (skip on macOS).
 if command -v flock >/dev/null 2>&1; then LOCK="flock /tmp/nextpnr.lock"; else LOCK=""; fi
-SEED=${SEED:-1}
-FREQ=${FREQ:-100}
+# FREQ = the real cpu_clk the MMCM produces (200 MHz * 5 / 40 = 25 MHz).  The
+# sysclk is pinned to 200 MHz by the XDC; --freq only sets the *default* for the
+# derived cpu_clk/bs_drck.  Asking for 100 MHz there just over-constrains a clock
+# that physically runs at 25 -- reports a bogus "FAIL at 100 MHz" and drives a
+# tighter, more congested placement that can go unroutable.
+FREQ=${FREQ:-25}
+# SEED: if the caller pins one, use just that; otherwise sweep until one routes
+# (nextpnr placement is seed-sensitive and a congested SoC can miss on any given
+# seed -- exactly like the calc target in the top-level Makefile).
+if [ -n "${SEED:-}" ]; then SEEDS=$SEED; else SEEDS=${SEEDS:-"1 2 3 4 42 7 12 19"}; fi
 cd $ROOT/picosoc
 say(){ echo "===== $* ====="; }
 
@@ -42,14 +51,24 @@ $YOSYS -p "read_verilog -sv vc707_picosoc.v picosoc_noflash.v picorv32.v simpleu
   >/tmp/picosoc_synth.log 2>&1 || { echo "SYNTH FAILED"; tail -15 /tmp/picosoc_synth.log; exit 1; }
 grep -E "^\s+[0-9]+\s+RAMB36E1" /tmp/picosoc_synth.log | tail -1
 
-say "3/6 nextpnr-xilinx (router2, seed $SEED, flock-serialized, $FREQ MHz)"
-$LOCK env NEXTPNR_ARC_MAX_VISIT=2000000 \
-  $NEXTPNR --router router2 --seed $SEED --chipdb $CHIPDB --xdc vc707_picosoc.xdc \
-    --json /tmp/picosoc_open.json --fasm /tmp/picosoc_open.fasm --freq $FREQ \
-    >/tmp/picosoc_npnr.log 2>&1
-echo "nextpnr exit=$?"
-grep -iE "Max frequency|Routing complete|failed|unrouted|error" /tmp/picosoc_npnr.log | tail -5
-test -s /tmp/picosoc_open.fasm || { echo "FASM FAILED"; exit 1; }
+say "3/6 nextpnr-xilinx (router2, freq $FREQ MHz, seeds: $SEEDS)"
+rm -f /tmp/picosoc_open.fasm
+for s in $SEEDS; do
+  $LOCK env NEXTPNR_ARC_MAX_VISIT=2000000 \
+    $NEXTPNR --router router2 --seed $s --chipdb $CHIPDB --xdc vc707_picosoc.xdc \
+      --json /tmp/picosoc_open.json --fasm /tmp/picosoc_open.fasm.s$s --freq $FREQ \
+      >/tmp/picosoc_npnr.log 2>&1
+  rc=$?
+  fmax=$(grep "Max frequency for clock 'cpu_clk'" /tmp/picosoc_npnr.log | grep -oE "[0-9]+\.[0-9]+" | head -1)
+  if [ $rc -eq 0 ] && [ -s /tmp/picosoc_open.fasm.s$s ]; then
+    echo "  seed $s: routed  (cpu_clk ${fmax:-?} MHz, target $FREQ)"
+    mv /tmp/picosoc_open.fasm.s$s /tmp/picosoc_open.fasm; break
+  fi
+  echo "  seed $s: unroutable (exit $rc) -- trying next"
+  rm -f /tmp/picosoc_open.fasm.s$s
+done
+grep -iE "Max frequency|Routing complete|failed|unrouted|error" /tmp/picosoc_npnr.log | tail -3
+test -s /tmp/picosoc_open.fasm || { echo "FASM FAILED (no seed in '$SEEDS' routed; add more via SEEDS='...')"; exit 1; }
 
 say "4/6 fasm2frames"
 XRAY_ALLOW_MISSING_FEATURES=1 $PXPY $F2F --db-root $PXDB --part $PART \

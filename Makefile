@@ -213,6 +213,13 @@ BREW_EIGEN     := $(shell brew --prefix eigen 2>/dev/null)
 NEXTPNR_CMAKE  := -DCMAKE_C_COMPILER=$(BREW_LLVM)/bin/clang \
                   -DCMAKE_CXX_COMPILER=$(BREW_LLVM)/bin/clang++ \
                   -DEIGEN3_INCLUDE_DIRS=$(BREW_EIGEN)/include/eigen3
+# openFPGALoader includes <libusb.h>, but Homebrew's header is at
+# include/libusb-1.0/libusb.h.  It only wires up LIBUSB_INCLUDE_DIRS when a
+# libusb cable is enabled, and even then CMake may not surface brew's keg path,
+# so add brew's prefix (for pkg-config/find_package) + the explicit libusb -I.
+BREW_LIBUSB    := $(shell brew --prefix libusb 2>/dev/null)
+OFL_CMAKE      := -DCMAKE_PREFIX_PATH="$(shell brew --prefix 2>/dev/null)" \
+                  -DCMAKE_CXX_FLAGS="-I$(BREW_LIBUSB)/include/libusb-1.0"
 else ifeq ($(UNAME_S),Linux)
 # Pin cmake's Python3 to the Boost-matched system interpreter so
 # find_package picks a python with an installed libboost_python component.
@@ -255,7 +262,7 @@ $(PRJXRAY_STAMP): $(DEPS)/.initialised $(PRJXRAY_DIR)/requirements.txt
 
 $(OFL_BIN): $(DEPS)/.initialised
 	cmake -S $(OPENFLD_DIR) -B $(OPENFLD_DIR)/build \
-	    -DCMAKE_BUILD_TYPE=Release
+	    -DCMAKE_BUILD_TYPE=Release $(OFL_CMAKE)
 	cmake --build $(OPENFLD_DIR)/build -j$$(getconf _NPROCESSORS_ONLN)
 
 
