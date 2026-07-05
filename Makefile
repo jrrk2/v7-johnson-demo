@@ -217,9 +217,14 @@ NEXTPNR_CMAKE  := -DCMAKE_C_COMPILER=$(BREW_LLVM)/bin/clang \
 # include/libusb-1.0/libusb.h.  It only wires up LIBUSB_INCLUDE_DIRS when a
 # libusb cable is enabled, and even then CMake may not surface brew's keg path,
 # so add brew's prefix (for pkg-config/find_package) + the explicit libusb -I.
+# brew --prefix libusb is the version-independent opt symlink (…/opt/libusb),
+# so the -I/-L follow the current version.  The -L matters because pkg-config
+# can bake a *versioned* Cellar lib path (…/Cellar/libusb/1.0.NN/lib) into the
+# link that dies the moment you `brew upgrade libusb`; the opt path never does.
 BREW_LIBUSB    := $(shell brew --prefix libusb 2>/dev/null)
 OFL_CMAKE      := -DCMAKE_PREFIX_PATH="$(shell brew --prefix 2>/dev/null)" \
-                  -DCMAKE_CXX_FLAGS="-I$(BREW_LIBUSB)/include/libusb-1.0"
+                  -DCMAKE_CXX_FLAGS="-I$(BREW_LIBUSB)/include/libusb-1.0" \
+                  -DCMAKE_EXE_LINKER_FLAGS="-L$(BREW_LIBUSB)/lib"
 else ifeq ($(UNAME_S),Linux)
 # Pin cmake's Python3 to the Boost-matched system interpreter so
 # find_package picks a python with an installed libboost_python component.
