@@ -12,7 +12,7 @@
 
 // Our identity (MAC mirrors the RTL's reset default pattern)
 static const uint8_t my_mac[6] = {0x00, 0x23, 0x01, 0x00, 0x89, 0x07};
-static const uint8_t my_ip[4]  = {192, 168, 0, 51};
+static const uint8_t my_ip[4]  = {192, 168, 1, 42};
 
 static void putchar_(char c) { reg_uart_data = c; }
 static void print(const char *s) { while (*s) putchar_(*s++); }
@@ -177,7 +177,7 @@ void main(void) {
     reg_leds = 1;
     reg_uart_clkdiv = 434;      // 115200 @ 50 MHz (single-domain MMCM build)
     reg_leds = 3;
-    print("\r\nethsoc M2: ARP + ICMP echo at 192.168.0.51\r\n");
+    print("\r\nethsoc M2: ARP + ICMP echo at 192.168.1.42\r\n");
 
     eth_init(my_mac);
 
