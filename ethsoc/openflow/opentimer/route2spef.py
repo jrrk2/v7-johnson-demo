@@ -58,9 +58,12 @@ with open(out, "w") as f:
         R = net_delay(fo) / C          # Elmore R*C = per-fanout Vivado net delay
         totcap = C * fo
         f.write(f"*D_NET {net} {totcap:.5f}\n*CONN\n")
-        f.write(f"*I {drvp} O\n" if ":" in drv else f"*P {drvp} O\n")
+        # NB: test the PORT: prefix, NOT ":" in the raw string -- "PORT:x" itself
+        # contains a colon, so the old test emitted port drivers as instance pins
+        # (*I) and broke the RC tree of every port-driven (cut-BUFG) clock net.
+        f.write(f"*P {drvp} O\n" if drv.startswith("PORT:") else f"*I {drvp} O\n")
         for s in snks:
-            f.write(f"*I {pinref(s)} I\n" if ":" in s else f"*P {pinref(s)} I\n")
+            f.write(f"*P {pinref(s)} I\n" if s.startswith("PORT:") else f"*I {pinref(s)} I\n")
         f.write("*CAP\n")
         f.write(f"1 {drvp} 0.0\n")
         for i, s in enumerate(snkps, start=2):
