@@ -55,7 +55,12 @@ with open(out, "w") as f:
         drvp = pinref(drv)
         snkps = [pinref(s) for s in snks]
         fo = len(snkps)
-        R = net_delay(fo) / C          # Elmore R*C = per-fanout Vivado net delay
+        # CLOCK nets ride the dedicated low-skew global tree, NOT fabric routing:
+        # the generic fanout-lumped delay (~2ns at fanout ~900) fabricates huge
+        # capture-clock skew and fake hold violations.  Detect by sink pins.
+        nck = sum(1 for s in snks if s.endswith(":C") or s.endswith(":CLK"))
+        is_clock = fo > 0 and nck * 2 >= fo
+        R = (0.050 if is_clock else net_delay(fo)) / C   # Elmore R*C (ns)
         totcap = C * fo
         f.write(f"*D_NET {net} {totcap:.5f}\n*CONN\n")
         # NB: test the PORT: prefix, NOT ":" in the raw string -- "PORT:x" itself
