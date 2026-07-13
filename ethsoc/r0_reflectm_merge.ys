@@ -1,0 +1,10 @@
+# phase C: merge (deduped by merge_json_modules.py), flatten only, NO opt
+read_json /tmp/reflectm_pre.json
+hierarchy -top top
+# the macro netlist carries keep_hierarchy from the harness build; strip it
+attrmap -remove keep_hierarchy -remove KEEP_HIERARCHY
+attrmap -modattr -remove keep_hierarchy -remove KEEP_HIERARCHY
+flatten
+delete t:$scopeinfo
+stat
+write_json /tmp/r0_reflectm.json

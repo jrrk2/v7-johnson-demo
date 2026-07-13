@@ -1,0 +1,16 @@
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/xil_bb.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/gt_stubs.v
+delete RAM32M RAM64M
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/ram_m_structural.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/vc707_ethloop_netlist_y.v
+hierarchy -top top
+flatten
+clean
+delete t:$scopeinfo
+blackbox =* top %d
+# stable names for the clock nets (referenced by ethloop_timing.xdc create_clock;
+# the flatten-generated names are rebuild-fragile)
+stat
+write_json /tmp/r0_ethloop.json

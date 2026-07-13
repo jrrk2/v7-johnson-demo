@@ -1,0 +1,8 @@
+read_json /tmp/arpm_pre.json
+hierarchy -top top
+attrmap -remove keep_hierarchy -remove KEEP_HIERARCHY
+attrmap -modattr -remove keep_hierarchy -remove KEEP_HIERARCHY
+flatten
+delete t:$scopeinfo
+stat
+write_json /tmp/r0_arpm.json

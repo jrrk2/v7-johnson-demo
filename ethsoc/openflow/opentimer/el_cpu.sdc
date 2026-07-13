@@ -1,0 +1,265 @@
+create_clock -period 20 -name cpu [get_ports cpu_clk]
+set_input_transition 0.020 -min -rise [get_ports <const0>]
+set_input_transition 0.020 -min -fall [get_ports <const0>]
+set_input_transition 0.020 -max -rise [get_ports <const0>]
+set_input_transition 0.020 -max -fall [get_ports <const0>]
+set_input_delay 0.0 -max [get_ports <const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports <const1>]
+set_input_transition 0.020 -min -fall [get_ports <const1>]
+set_input_transition 0.020 -max -rise [get_ports <const1>]
+set_input_transition 0.020 -max -fall [get_ports <const1>]
+set_input_delay 0.0 -max [get_ports <const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports const0]
+set_input_transition 0.020 -min -fall [get_ports const0]
+set_input_transition 0.020 -max -rise [get_ports const0]
+set_input_transition 0.020 -max -fall [get_ports const0]
+set_input_delay 0.0 -max [get_ports const0] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports const1]
+set_input_transition 0.020 -min -fall [get_ports const1]
+set_input_transition 0.020 -max -rise [get_ports const1]
+set_input_transition 0.020 -max -fall [get_ports const1]
+set_input_delay 0.0 -max [get_ports const1] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports cpu_clk]
+set_input_transition 0.020 -min -fall [get_ports cpu_clk]
+set_input_transition 0.020 -max -rise [get_ports cpu_clk]
+set_input_transition 0.020 -max -fall [get_ports cpu_clk]
+set_input_transition 0.020 -min -rise [get_ports eth_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_<const0>]
+set_input_delay 0.0 -max [get_ports eth_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_<const1>]
+set_input_delay 0.0 -max [get_ports eth_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_rx_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_rx_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_rx_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_rx_<const0>]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_rx_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_rx_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_rx_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_rx_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_rx_<const1>]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_rx_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_rx_GND_2]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_rx_GND_2]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_rx_GND_2]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_rx_GND_2]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_rx_GND_2] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_rx_VCC_2]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_rx_VCC_2]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_rx_VCC_2]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_rx_VCC_2]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_rx_VCC_2] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_rx_VCC_NET_1]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_rx_VCC_NET_1]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_rx_VCC_NET_1]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_rx_VCC_NET_1]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_rx_VCC_NET_1] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_rx_eth_clk]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_rx_eth_clk]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_rx_eth_clk]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_rx_eth_clk]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_rx_eth_clk] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_tx_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_tx_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_tx_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_tx_<const0>]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_tx_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_tx_GND_2]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_tx_GND_2]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_tx_GND_2]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_tx_GND_2]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_tx_GND_2] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_RAMB16_inst_tx_VCC_1]
+set_input_transition 0.020 -min -fall [get_ports eth_RAMB16_inst_tx_VCC_1]
+set_input_transition 0.020 -max -rise [get_ports eth_RAMB16_inst_tx_VCC_1]
+set_input_transition 0.020 -max -fall [get_ports eth_RAMB16_inst_tx_VCC_1]
+set_input_delay 0.0 -max [get_ports eth_RAMB16_inst_tx_VCC_1] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_eth_mdio_IBUF]
+set_input_transition 0.020 -min -fall [get_ports eth_eth_mdio_IBUF]
+set_input_transition 0.020 -max -rise [get_ports eth_eth_mdio_IBUF]
+set_input_transition 0.020 -max -fall [get_ports eth_eth_mdio_IBUF]
+set_input_delay 0.0 -max [get_ports eth_eth_mdio_IBUF] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_<const1>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const0>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const1>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_mac_axis_gmii_rx_inst_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const0>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const1>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_mac_axis_gmii_tx_inst_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const0>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const1>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_gtrefclk_n_0]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_gtrefclk_n_0]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_gtrefclk_n_0]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_gtrefclk_n_0]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_gtrefclk_n_0] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_userclk_n_0]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_userclk_n_0]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_userclk_n_0]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_userclk_n_0]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_bufg_userclk_n_0] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_rxrecclkbufg_n_0]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_rxrecclkbufg_n_0]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_rxrecclkbufg_n_0]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_rxrecclkbufg_n_0]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_core_clocking_i_rxrecclkbufg_n_0] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_mmcm_locked]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_mmcm_locked]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_mmcm_locked]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_mmcm_locked]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_mmcm_locked] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const0>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const0>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const0>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const0>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const1>]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const1>]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const1>]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const1>]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_CODE_GRP_6_i_1_n_0]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_CODE_GRP_6_i_1_n_0]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_CODE_GRP_6_i_1_n_0]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_CODE_GRP_6_i_1_n_0]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_gig_ethernet_pcs_pma_0_core_CODE_GRP_6_i_1_n_0] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gt0_cpllrefclklost_i]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gt0_cpllrefclklost_i]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gt0_cpllrefclklost_i]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gt0_cpllrefclklost_i]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gt0_cpllrefclklost_i] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_1]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_1]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_1]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_1]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_1] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_31]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_31]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_31]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_31]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_31] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_45]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_45]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_45]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_45]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_45] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_80]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_80]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_80]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_80]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_gtwizard_inst_inst_gtwizard_i_gt0_GTWIZARD_i_gtxe2_i_n_80] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxchariscomma_rec]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxchariscomma_rec]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxchariscomma_rec]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxchariscomma_rec]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxchariscomma_rec] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxcharisk_rec]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxcharisk_rec]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxcharisk_rec]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxcharisk_rec]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxcharisk_rec] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdata_rec]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdata_rec]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdata_rec]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdata_rec]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdata_rec] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdisperr_rec]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdisperr_rec]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdisperr_rec]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdisperr_rec]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxdisperr_rec] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxnotintable_rec]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxnotintable_rec]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxnotintable_rec]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxnotintable_rec]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_pcs_pma_block_i_transceiver_inst_rxnotintable_rec] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txn]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txn]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txn]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txn]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txn] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txp]
+set_input_transition 0.020 -min -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txp]
+set_input_transition 0.020 -max -rise [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txp]
+set_input_transition 0.020 -max -fall [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txp]
+set_input_delay 0.0 -max [get_ports eth_sgmii_soc1_i_pcs_pma_inst_sgmii_txp] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports rst]
+set_input_transition 0.020 -min -fall [get_ports rst]
+set_input_transition 0.020 -max -rise [get_ports rst]
+set_input_transition 0.020 -max -fall [get_ports rst]
+set_input_delay 0.0 -max [get_ports rst] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports sgmii_refclk_n]
+set_input_transition 0.020 -min -fall [get_ports sgmii_refclk_n]
+set_input_transition 0.020 -max -rise [get_ports sgmii_refclk_n]
+set_input_transition 0.020 -max -fall [get_ports sgmii_refclk_n]
+set_input_delay 0.0 -max [get_ports sgmii_refclk_n] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports sgmii_refclk_p]
+set_input_transition 0.020 -min -fall [get_ports sgmii_refclk_p]
+set_input_transition 0.020 -max -rise [get_ports sgmii_refclk_p]
+set_input_transition 0.020 -max -fall [get_ports sgmii_refclk_p]
+set_input_delay 0.0 -max [get_ports sgmii_refclk_p] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports sgmii_rxn]
+set_input_transition 0.020 -min -fall [get_ports sgmii_rxn]
+set_input_transition 0.020 -max -rise [get_ports sgmii_rxn]
+set_input_transition 0.020 -max -fall [get_ports sgmii_rxn]
+set_input_delay 0.0 -max [get_ports sgmii_rxn] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports sgmii_rxp]
+set_input_transition 0.020 -min -fall [get_ports sgmii_rxp]
+set_input_transition 0.020 -max -rise [get_ports sgmii_rxp]
+set_input_transition 0.020 -max -fall [get_ports sgmii_rxp]
+set_input_delay 0.0 -max [get_ports sgmii_rxp] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports u_rx_<const0>]
+set_input_transition 0.020 -min -fall [get_ports u_rx_<const0>]
+set_input_transition 0.020 -max -rise [get_ports u_rx_<const0>]
+set_input_transition 0.020 -max -fall [get_ports u_rx_<const0>]
+set_input_delay 0.0 -max [get_ports u_rx_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports u_rx_<const1>]
+set_input_transition 0.020 -min -fall [get_ports u_rx_<const1>]
+set_input_transition 0.020 -max -rise [get_ports u_rx_<const1>]
+set_input_transition 0.020 -max -fall [get_ports u_rx_<const1>]
+set_input_delay 0.0 -max [get_ports u_rx_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports u_tx_<const0>]
+set_input_transition 0.020 -min -fall [get_ports u_tx_<const0>]
+set_input_transition 0.020 -max -rise [get_ports u_tx_<const0>]
+set_input_transition 0.020 -max -fall [get_ports u_tx_<const0>]
+set_input_delay 0.0 -max [get_ports u_tx_<const0>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports u_tx_<const1>]
+set_input_transition 0.020 -min -fall [get_ports u_tx_<const1>]
+set_input_transition 0.020 -max -rise [get_ports u_tx_<const1>]
+set_input_transition 0.020 -max -fall [get_ports u_tx_<const1>]
+set_input_delay 0.0 -max [get_ports u_tx_<const1>] -clock cpu
+set_input_transition 0.020 -min -rise [get_ports uart_rx]
+set_input_transition 0.020 -min -fall [get_ports uart_rx]
+set_input_transition 0.020 -max -rise [get_ports uart_rx]
+set_input_transition 0.020 -max -fall [get_ports uart_rx]
+set_input_delay 0.0 -max [get_ports uart_rx] -clock cpu

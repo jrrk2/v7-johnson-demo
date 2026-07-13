@@ -1,0 +1,40 @@
+# Macro-merge open flow, yosys stage — THREE-PHASE to keep synth_xilinx's
+# optimiser away from the imported Vivado netlist (its whitebox FF models
+# const-fold CE/R per-cell on imported FDREs otherwise):
+#   A: user RTL synth with eth_macro as a blackbox stub
+#   B: macro netlist pass-through (R0 recipe: no synth, names preserved)
+#   C: merge + flatten only (no opt) -> merged json
+
+# ---- phase A: user synthesis ----------------------------------------------
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/xil_bb.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/eth_macro_bb.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/vc707_reflectm.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/async_fifo.v
+synth_xilinx -top top -flatten -noiopad -nowidelut -nocarry
+clean
+delete t:$scopeinfo
+blackbox =* top %d
+write_json /tmp/reflectm_user.json
+design -reset
+
+# ---- phase B: macro netlist pass-through (proven R0 recipe) ----------------
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/xil_bb.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/gt_stubs.v
+delete RAM32M RAM64M
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/ram_m_structural.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/eth_macro_impl_ym.v
+hierarchy -top eth_macro
+proc
+flatten
+# NO clean here: it merges aliased wires and drops the losing NAMES, which
+# breaks --fixed-routes net-name matching (1116 nets lost). Unused wires in
+# the json are harmless to nextpnr.
+delete t:$scopeinfo
+blackbox =* eth_macro %d
+write_json /tmp/reflectm_macro.json
+design -reset
+

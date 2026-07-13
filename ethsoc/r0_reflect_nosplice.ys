@@ -1,0 +1,14 @@
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/xil_bb.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/gt_stubs.v
+delete RAM32M RAM64M
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/ram_m_structural.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/vc707_reflect_netlist_y.v
+hierarchy -top top
+flatten
+clean
+delete t:$scopeinfo
+blackbox =* top %d
+stat
+write_json /tmp/r0_reflect.json

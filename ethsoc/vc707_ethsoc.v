@@ -111,6 +111,7 @@ module top (
     // the programming cable, independent of UART/pins.  Shift 32 bits out
     // of USER1: {hb[1:0], mmcm_locked, resetn, gpio[3:0], status[15:0],
     // 8'hA5}.  The 0xA5 signature shifts out first and proves the chain.
+`ifndef NO_JTAG
     wire bs_capture, bs_drck, bs_sel, bs_shift, bs_tdi;
     reg [31:0] bs_sr;
     reg [25:0] bs_hb;
@@ -124,6 +125,7 @@ module top (
             bs_sr <= {bs_hb[25:24], mmcm_locked, resetn, gpio[3:0], status_sync1, 8'hA5};
         else if (bs_sel && bs_shift)
             bs_sr <= {bs_tdi, bs_sr[31:1]};
+`endif
 
 `ifdef LED_DEBUG
     // Bypass diagnostics: LD7=MMCM locked, LD6=resetn, LD5/4=cpu_clk

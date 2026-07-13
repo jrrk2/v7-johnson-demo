@@ -1,4 +1,17 @@
 // See LICENSE for license details.
+//
+// FIFO-boundary restructure for the open flow: all 125 MHz logic (PCS/PMA +
+// GTX + MAC + byte/word converters + eth-side async-FIFO halves) lives in
+// eth_macro, which the open flow imports as a frozen Vivado-implemented
+// macro.  Everything in THIS module is clocked by msoc_clk only: CSRs, the
+// msoc-side FIFO halves, the single-clock packet BRAMs and the drain/push
+// FSMs.  The only macro-boundary signals are Gray pointers (async, 2-flop
+// synchronised on the consuming side) and combinational distributed-RAM read
+// ports — no same-clock arc crosses the boundary, so nextpnr's missing hold
+// analysis cannot corrupt the datapath.
+//
+// The CPU-visible register map and buffer layout are unchanged from the
+// pre-split framing_top_sgmii.
 `default_nettype none
 
 module framing_top_sgmii
@@ -41,125 +54,236 @@ module framing_top_sgmii
 logic       phy_mdclk;
 assign phy_mdc = phy_mdclk;
 
-// 125 MHz MAC clock from PCS/PMA IP (via sgmii_soc)
-wire        eth_clk;
-assign eth_clk_o = eth_clk;
-
 logic [16:0] core_lsu_addr_dly;
 
-logic tx_enable_i, mac_gmii_tx_en;
-logic [47:0] mac_address, rx_dest_mac;
-logic [10:0] tx_frame_addr, rx_length_axis[0:31], tx_packet_length;
-logic [12:0] axis_tx_frame_size;
+logic [47:0] mac_address;
+logic [10:0] tx_packet_length;
+wire  [10:0] rx_length_rd;
 logic        ce_d_dly, avail;
 logic [63:0] framing_rdata_pkt, framing_wdata_pkt;
-logic [3:0] tx_enable_dly;
-logic [4:0] firstbuf, nextbuf, lastbuf;
-logic [2:0] last;
-   
-reg        byte_sync, sync, irq_en, tx_busy;
+logic [4:0]  firstbuf, nextbuf, lastbuf;
+logic        sync, irq_en;
+logic        cooked, loopback, promiscuous;
+logic [3:0]  spare;
 
-   wire [7:0] m_enb = (we_d ? core_lsu_be : 8'hFF);
-   logic cooked, tx_enable_old, loopback, promiscuous;
-   logic [3:0] spare;   
-   logic [10:0] rx_addr_axis;
-   
-       /*
-        * AXI input
-        */
-        reg         tx_axis_tvalid;
-        reg         tx_axis_tvalid_dly;
-        reg 	    tx_axis_tlast;
-        wire [7:0]  tx_axis_tdata;
-        wire        tx_axis_tready;
-        wire        tx_axis_tuser = 1'b0;
-   
-       /*
-        * AXI output
-        */
-       wire       rx_clk;
-       wire [7:0] rx_axis_tdata;
-       wire       rx_axis_tvalid;
-       wire       rx_axis_tlast;
-       wire       rx_axis_tuser;
-   
-      /*
-        * AXIS Status
-        */
-         wire [31:0] tx_fcs_reg_rev, rx_fcs_reg_rev;
-   
-   always @(posedge rx_clk)
-     if (rst_int == 1'b1)
-       begin
-	  byte_sync <= 1'b0;
-       end
-     else
-       begin
-	  if (rx_axis_tvalid && (byte_sync == 0) && (nextbuf != (firstbuf+lastbuf)&31))
-            begin
-               byte_sync <= 1'b1;
-            end
-	  if (rx_axis_tlast && byte_sync)
-            begin
-               last <= 1'b1;
-            end
-          else if ((last > 0) && (last < 7))
-            begin
-	       byte_sync <= 1'b0;
-               last <= last + 3'b1;
-            end
-          else
-            begin
-               last <= 3'b0;
-            end
-       end
+wire [15:0]  pcspma_status;
+wire [31:0]  tx_fcs_reg, rx_fcs_reg;
+wire [31:0]  tx_fcs_reg_rev, rx_fcs_reg_rev;
 
-   wire  [1:0] rx_wr = rx_axis_tvalid << rx_addr_axis[2];
-   logic [15:0] douta;
-   assign tx_axis_tdata = douta >> {tx_frame_addr[2],3'b000};
-   
-   dualmem_widen8 #(
-                     .ADDR_A_WIDTH(15),   // 5-bit buf select + 8-bit word + 2-bit byte = 15
-                     .ADDR_B_WIDTH(13)    // 64KB / 8 bytes = 8K words → 13 bits
-   ) RAMB16_inst_rx (
-                                    .clka(rx_clk),                // Port A Clock
-                                    .clkb(msoc_clk),              // Port B Clock
-                                    .douta(),                     // Port A 8-bit Data Output
-                                    .addra({nextbuf[4:0],rx_addr_axis[10:3],rx_addr_axis[1:0]}),    // Port A 15-bit Address Input
-                                    .dina({rx_axis_tdata,rx_axis_tdata}), // Port A 8-bit Data Input
-                                    .ena(rx_axis_tvalid),         // Port A RAM Enable Input
-                                    .wea(rx_wr),                  // Port A Write Enable Input
-                                    .doutb(framing_rdata_pkt),    // Port B 64-bit Data Output
-                                    .addrb(core_lsu_addr[15:3]),  // Port B 13-bit Address Input
-                                    .dinb(core_lsu_wdata),        // Port B 64-bit Data Input
-                                    .enb(ce_d & framing_sel & core_lsu_addr[16]),
-                                                                  // Port B RAM Enable Input (RX at 0x10000)
-                                    .web(we_d ? {(|core_lsu_be[7:4]),(|core_lsu_be[3:0])} : 2'b0) // Port B Write Enable Input
-                                    );
+// ===========================================================================
+//  eth_macro (frozen 125 MHz island) + macro-boundary FIFO halves
+// ===========================================================================
+wire [5:0]  rx_rd_gray, rx_wr_gray, tx_rd_gray, tx_wr_gray;
+wire [4:0]  rx_rd_addr, tx_rd_addr;
+wire [71:0] rx_rd_data, tx_rd_data;
+wire        rx_overflow;
 
-    dualmem_widen RAMB16_inst_tx (
-                                   .clka(~eth_clk),             // Port A Clock (125 MHz MAC domain)
-                                   .clkb(msoc_clk),              // Port A Clock
-                                   .douta(douta),                // Port A 8-bit Data Output
-                                   .addra({1'b0,tx_frame_addr[10:3],tx_frame_addr[1:0]}),  // Port A 11-bit Address Input
-                                   .dina(16'b0),                 // Port A 8-bit Data Input
-                                   .ena(tx_axis_tvalid),         // Port A RAM Enable Input
-                                   .wea(2'b0),                  // Port A Write Enable Input
-                                   .doutb(framing_wdata_pkt),    // Port B 32-bit Data Output
-                                   .addrb(core_lsu_addr[11:3]),  // Port B 9-bit Address Input
-                                   .dinb(core_lsu_wdata), // Port B 32-bit Data Input
-                                   .enb(ce_d & framing_sel & (core_lsu_addr[16:12]==5'b00001)),
-				                                 // Port B RAM Enable Input (TX at 0x1000)
-                                   .web(we_d ? {(|core_lsu_be[7:4]),(|core_lsu_be[3:0])} : 2'b0) // Port B Write Enable Input
-                                   );
+eth_macro eth_macro1 (
+    .clk_int(clk_int),
+    .rst_int(rst_int),
+    .sgmii_rxp(sgmii_rxp),
+    .sgmii_rxn(sgmii_rxn),
+    .sgmii_txp(sgmii_txp),
+    .sgmii_txn(sgmii_txn),
+    .sgmii_refclk_p(sgmii_refclk_p),
+    .sgmii_refclk_n(sgmii_refclk_n),
+    .phy_reset_n(phy_reset_n),
+    .eth_clk_o(eth_clk_o),
+    .gtrefclk_bufg_o(gtrefclk_bufg_o),
+    .rx_rd_gray(rx_rd_gray), .rx_wr_gray(rx_wr_gray),
+    .rx_rd_addr(rx_rd_addr), .rx_rd_data(rx_rd_data),
+    .tx_rd_gray(tx_rd_gray), .tx_wr_gray(tx_wr_gray),
+    .tx_rd_addr(tx_rd_addr), .tx_rd_data(tx_rd_data),
+    .pcspma_status(pcspma_status),
+    .rx_fcs_reg(rx_fcs_reg),
+    .tx_fcs_reg(tx_fcs_reg),
+    .rx_overflow(rx_overflow));
 
+// msoc-side RX FIFO read half (write half + RAM inside the macro)
+wire        rxm_rd_en, rxm_empty;
+wire [71:0] rxm_data;
+async_fifo_rd #(.DATA_WIDTH(72), .ADDR_WIDTH(5)) u_rxf_rd (
+    .rd_clk(msoc_clk), .rd_rst(rst_int),
+    .rd_en(rxm_rd_en), .rd_data(rxm_data), .rd_empty(rxm_empty),
+    .rd_gray(rx_rd_gray), .wr_gray(rx_wr_gray),
+    .rd_addr(rx_rd_addr), .rd_data_mem(rx_rd_data));
+
+// msoc-side TX FIFO write half (read half inside the macro)
+wire        txm_wr_en, txm_full;
+wire [71:0] txm_wr_data;
+async_fifo_wr #(.DATA_WIDTH(72), .ADDR_WIDTH(5)) u_txf_wr (
+    .wr_clk(msoc_clk), .wr_rst(rst_int),
+    .wr_en(txm_wr_en), .wr_data(txm_wr_data), .wr_full(txm_full),
+    .wr_gray(tx_wr_gray), .rd_gray(tx_rd_gray),
+    .rd_addr(tx_rd_addr), .rd_data(tx_rd_data));
+
+// ===========================================================================
+//  single-clock packet BRAMs (port A = FSM, port B = CPU bus)
+// ===========================================================================
+logic [7:0] rx_word_addr;
+wire [63:0] rx_word;
+wire        rx_pop = ~rxm_empty;
+assign rxm_rd_en = rx_pop;
+
+wire [63:0] tx_bram_dout;
+logic [7:0] tx_raddr;
+wire        tx_bram_en;
+
+dualmem64 #(.ADDR_WIDTH(13)) RAMB16_inst_rx (
+    .clka(msoc_clk),
+    .dina(rx_word),
+    .addra({nextbuf[4:0], rx_word_addr}),
+    .wea({2{rx_pop}}),
+    .ena(rx_pop),
+    .douta(),
+    .clkb(msoc_clk),
+    .dinb(core_lsu_wdata),
+    .addrb(core_lsu_addr[15:3]),
+    .web(we_d ? {(|core_lsu_be[7:4]),(|core_lsu_be[3:0])} : 2'b0),
+    .enb(ce_d & framing_sel & core_lsu_addr[16]),   // RX buffers at 0x10000
+    .doutb(framing_rdata_pkt));
+
+dualmem64 #(.ADDR_WIDTH(9)) RAMB16_inst_tx (
+    .clka(msoc_clk),
+    .dina(64'b0),
+    .addra({1'b0, tx_raddr}),
+    .wea(2'b0),
+    .ena(tx_bram_en),
+    .douta(tx_bram_dout),
+    .clkb(msoc_clk),
+    .dinb(core_lsu_wdata),
+    .addrb(core_lsu_addr[11:3]),
+    .web(we_d ? {(|core_lsu_be[7:4]),(|core_lsu_be[3:0])} : 2'b0),
+    .enb(ce_d & framing_sel & (core_lsu_addr[16:12]==5'b00001)), // TX at 0x1000
+    .doutb(framing_wdata_pkt));
+
+// ===========================================================================
+//  RX drain FSM (msoc_clk): FIFO word -> BRAM, filter + length bookkeeping
+// ===========================================================================
+logic [47:0] rx_dest_mac;
+
+// unpack the head word's byte slots
+wire [8:0] rs [0:7];
+genvar gi;
+generate for (gi = 0; gi < 8; gi = gi + 1) begin : rslot
+    assign rs[gi] = rxm_data[gi*9 +: 9];
+end endgenerate
+assign rx_word = {rs[7][7:0],rs[6][7:0],rs[5][7:0],rs[4][7:0],
+                  rs[3][7:0],rs[2][7:0],rs[1][7:0],rs[0][7:0]};
+
+wire       rx_has_tlast = rs[0][8]|rs[1][8]|rs[2][8]|rs[3][8]|rs[4][8]|rs[5][8]|rs[6][8]|rs[7][8];
+wire [2:0] rx_tpos = rs[0][8] ? 3'd0 : rs[1][8] ? 3'd1 : rs[2][8] ? 3'd2 :
+                     rs[3][8] ? 3'd3 : rs[4][8] ? 3'd4 : rs[5][8] ? 3'd5 :
+                     rs[6][8] ? 3'd6 : 3'd7;
+wire [10:0] rx_len = {rx_word_addr, 3'b000} + rx_tpos + 1'b1;
+
+// dest MAC: first 6 bytes of the frame, first byte = MSB (matches old shift)
+wire [47:0] rx_dmac_now = {rs[0][7:0],rs[1][7:0],rs[2][7:0],rs[3][7:0],rs[4][7:0],rs[5][7:0]};
+wire [47:0] rx_dmac_eff = (rx_word_addr == 0) ? rx_dmac_now : rx_dest_mac;
+wire        rx_accept = (rx_dmac_eff[47:24]==24'h01005E) | (&rx_dmac_eff) |
+                        (mac_address == rx_dmac_eff) | promiscuous;
+// same buffer-availability expression as the pre-split design
+wire        rx_room = nextbuf != (firstbuf+lastbuf)&31;
+
+always @(posedge msoc_clk)
+  if (rst_int)
+    begin
+       rx_word_addr <= 'b0;
+       rx_dest_mac <= 'b0;
+       sync <= 1'b0;
+    end
+  else if (rx_pop)
+    begin
+       if (rx_word_addr == 0)
+         rx_dest_mac <= rx_dmac_now;
+       if (rx_has_tlast)
+         begin
+            rx_word_addr <= 'b0;
+            sync <= rx_accept & rx_room;   // readback visibility only
+         end
+       else
+         rx_word_addr <= rx_word_addr + 1'b1;
+    end
+
+// ===========================================================================
+//  TX push FSM (msoc_clk): BRAM word -> FIFO with tlast flags
+// ===========================================================================
+logic       tx_active, tx_pend_v;
+logic [7:0] tx_pend_addr;
+wire [7:0]  tx_words_total = (tx_packet_length + 11'd7) >> 3;
+wire        tx_stall = tx_pend_v & txm_full;
+assign      tx_bram_en = tx_active & ~tx_stall;
+
+// pack BRAM word + tlast flags for the FIFO
+wire [10:0] tx_gbase = {tx_pend_addr, 3'b000};
+generate for (gi = 0; gi < 8; gi = gi + 1) begin : tslot
+    assign txm_wr_data[gi*9 +: 9] = {(tx_gbase + gi) == (tx_packet_length - 1'b1),
+                                     tx_bram_dout[gi*8 +: 8]};
+end endgenerate
+assign txm_wr_en = tx_pend_v & ~txm_full;
+
+wire tx_start = framing_sel & we_d & (&core_lsu_be[3:0]) &
+                (core_lsu_addr[16:11]==6'b000001) & (core_lsu_addr[6:3]==4'd2);
+wire tx_abort = framing_sel & we_d & (&core_lsu_be[3:0]) &
+                (core_lsu_addr[16:11]==6'b000001) & (core_lsu_addr[6:3]==4'd3);
+
+// tx_busy: FSM active or FIFO not yet drained by the macro
+logic [5:0] tx_rd_gray_sync1, tx_rd_gray_sync2;
+wire tx_fifo_busy = (tx_wr_gray != tx_rd_gray_sync2);
+wire tx_busy = tx_active | tx_fifo_busy;
+
+always @(posedge msoc_clk)
+  if (rst_int)
+    begin
+       tx_active <= 1'b0;
+       tx_pend_v <= 1'b0;
+       tx_raddr <= 'b0;
+       tx_pend_addr <= 'b0;
+       tx_rd_gray_sync1 <= 'b0;
+       tx_rd_gray_sync2 <= 'b0;
+    end
+  else
+    begin
+       tx_rd_gray_sync1 <= tx_rd_gray;
+       tx_rd_gray_sync2 <= tx_rd_gray_sync1;
+       if (tx_start)
+         begin
+            tx_active <= 1'b1;
+            tx_pend_v <= 1'b0;
+            tx_raddr <= 'b0;
+         end
+       else if (tx_abort)
+         begin
+            tx_active <= 1'b0;
+            tx_pend_v <= 1'b0;
+         end
+       else if (tx_active & (tx_words_total == 0))
+         tx_active <= 1'b0;               // zero-length start: nothing to send
+       else if (tx_active & ~tx_stall)
+         begin
+            // stage 0: issue BRAM read
+            tx_pend_v <= (tx_raddr < tx_words_total);
+            tx_pend_addr <= tx_raddr;
+            if (tx_raddr < tx_words_total)
+              tx_raddr <= tx_raddr + 1'b1;
+            // stage 1: word for tx_pend_addr pushed this cycle (txm_wr_en)
+            if (tx_pend_v & (tx_pend_addr == tx_words_total - 1'b1))
+              begin
+                 tx_active <= 1'b0;
+                 tx_pend_v <= 1'b0;
+              end
+         end
+    end
+
+// ===========================================================================
+//  CSRs (register map unchanged)
+// ===========================================================================
 always @(posedge msoc_clk)
   if (rst_int)
     begin
     core_lsu_addr_dly <= 0;
     mac_address <= 48'H230100890702;
     tx_packet_length <= 0;
-    tx_enable_dly <= 0;
     cooked <= 1'b0;
     loopback <= 1'b0;
     spare <= 4'b0;
@@ -167,15 +291,13 @@ always @(posedge msoc_clk)
     phy_mdio_oe <= 1'b0;
     phy_mdio_o <= 1'b0;
     phy_mdclk <= 1'b0;
-    sync <= 1'b0;
     firstbuf <= 5'b0;
     lastbuf <= 5'b0;
     nextbuf <= 5'b0;
     eth_irq <= 1'b0;
     irq_en <= 1'b0;
     ce_d_dly <= 1'b0;
-    tx_busy <= 1'b0;
-    avail = 1'b0;         
+    avail = 1'b0;
     end
   else
     begin
@@ -183,73 +305,35 @@ always @(posedge msoc_clk)
     ce_d_dly <= ce_d;
     avail = nextbuf != firstbuf;
     eth_irq <= avail & irq_en; // make eth_irq go away immediately if irq_en is low
+    if (rx_pop & rx_has_tlast & rx_accept & rx_room)
+      nextbuf <= nextbuf + 1'b1;
     if (framing_sel&we_d&(&core_lsu_be[3:0])&(core_lsu_addr[16:11]==6'b000001))
       case(core_lsu_addr[6:3])
         0: mac_address[31:0] <= core_lsu_wdata;
         1: {irq_en,promiscuous,spare,loopback,cooked,mac_address[47:32]} <= core_lsu_wdata;
-        2: begin tx_enable_dly <= 10; tx_packet_length <= core_lsu_wdata; end /* tx payload size */
-        3: begin tx_enable_dly <= 0; tx_packet_length <= 0; end
+        2: begin tx_packet_length <= core_lsu_wdata; end /* tx payload size; starts push FSM */
+        3: begin tx_packet_length <= 0; end             /* abort */
         4: begin {phy_mdio_oe,phy_mdio_o,phy_mdclk} <= core_lsu_wdata; end
         5: begin lastbuf <= core_lsu_wdata[4:0]; end
         6: begin firstbuf <= core_lsu_wdata[4:0]; end
         default:;
       endcase
-       if ((last > 0) && ~sync)
-         begin
-         // check broadcast/multicast address
-	     sync <= (rx_dest_mac[47:24]==24'h01005E) | (&rx_dest_mac) | (mac_address == rx_dest_mac) | promiscuous;
-         end
-       else if (!last)
-         begin
-            if (sync) nextbuf <= nextbuf + 1'b1;
-            sync <= 1'b0;
-         end
-       if (mac_gmii_tx_en && tx_enable_i)
-         begin
-            tx_enable_dly <= 0;
-         end
-       else if (1'b1 == |tx_enable_dly)
-         begin
-         tx_busy <= 1'b1;
-         tx_enable_dly <= tx_enable_dly + !(&tx_enable_dly);
-         end
-       else if (~mac_gmii_tx_en)
-         tx_busy <= 1'b0;         
     end
 
-always @(posedge eth_clk)
-  if (rst_int)
-    begin
-       tx_enable_i <= 1'b0;
-    end
-  else
-    begin
-       if (mac_gmii_tx_en && tx_axis_tlast)
-         begin
-            tx_enable_i <= 1'b0;
-         end
-       else if (1'b1 == &tx_enable_dly)
-         tx_enable_i <= 1'b1;
-    end
-   
    always @* casez({ce_d_dly,core_lsu_addr_dly[16:3]})
     15'b100_0001_0???_0000 : framing_rdata = mac_address[31:0];                                        // 0x0800
     15'b100_0001_0???_0001 : framing_rdata = {irq_en, promiscuous, spare, loopback, cooked, mac_address[47:32]}; // 0x0808
-    15'b100_00??_????_0010 : framing_rdata = {tx_busy, 4'b0, tx_frame_addr, 5'b0, tx_packet_length};  // 0x0810
+    15'b100_00??_????_0010 : framing_rdata = {tx_busy, 4'b0, tx_pend_addr, 3'b0, 5'b0, tx_packet_length}; // 0x0810
     15'b100_0001_0???_0011 : framing_rdata = tx_fcs_reg_rev;                                           // 0x0818
     15'b100_0001_0???_0100 : framing_rdata = {phy_mdio_i,phy_mdio_oe,phy_mdio_o,phy_mdclk};           // 0x0820
     15'b100_0001_0???_0101 : framing_rdata = rx_fcs_reg_rev;                                           // 0x0828
-    15'b100_0001_0???_0110 : framing_rdata = {eth_irq, avail, lastbuf, nextbuf, firstbuf};             // 0x0830
-    15'b100_0001_1??_????? : framing_rdata = rx_length_axis[core_lsu_addr_dly[7:3]];                   // 0x0C00 RPLR (32 entries)
+    15'b100_0001_0???_0110 : framing_rdata = {rx_overflow, sync, eth_irq, avail, lastbuf, nextbuf, firstbuf}; // 0x0830
+    15'b100_0001_1??_????? : framing_rdata = rx_length_rd;                                             // 0x0C00 RPLR (32 entries)
     15'b100_001?_???????? : framing_rdata = framing_wdata_pkt;                                           // 0x1000 TX buffer
     15'b1_1?_????????????  : framing_rdata = framing_rdata_pkt;                                         // 0x10000 RX buffers (64KB)
     default: framing_rdata = 'h0;
     endcase
 
-   parameter dly = 0;
-   
-   wire [31:0] 	    tx_fcs_reg, rx_fcs_reg;
-   wire [15:0]      pcspma_status;
    assign 	    tx_fcs_reg_rev = {tx_fcs_reg[0],tx_fcs_reg[1],tx_fcs_reg[2],tx_fcs_reg[3],
                                           tx_fcs_reg[4],tx_fcs_reg[5],tx_fcs_reg[6],tx_fcs_reg[7],
                                           tx_fcs_reg[8],tx_fcs_reg[9],tx_fcs_reg[10],tx_fcs_reg[11],
@@ -266,104 +350,32 @@ always @(posedge eth_clk)
                                           rx_fcs_reg[20],rx_fcs_reg[21],rx_fcs_reg[22],rx_fcs_reg[23],
                                           rx_fcs_reg[24],rx_fcs_reg[25],rx_fcs_reg[26],rx_fcs_reg[27],
                                           rx_fcs_reg[28],rx_fcs_reg[29],rx_fcs_reg[30],rx_fcs_reg[31]};
-   
-   always @(posedge eth_clk)
-     if (rst_int)
-       begin
-          tx_axis_tvalid <= 'b0;
-	  tx_axis_tvalid_dly <= 'b0;
-	  tx_frame_addr <= 'b0;
-	  tx_axis_tlast <= 'b0;
-       end
-     else
-       begin
-          tx_enable_old <= tx_enable_i;
-	  if (tx_enable_i & (tx_enable_old == 0))
-	    begin
-	       tx_frame_addr <= 'b0;
-	    end
-	  if (tx_axis_tready)
-	    begin
-	       tx_frame_addr <= tx_frame_addr + 1;
-	       tx_axis_tlast <= (tx_frame_addr == tx_packet_length-2) & tx_axis_tvalid_dly;
-	    end
-          tx_axis_tvalid <= tx_axis_tvalid_dly;
-	  if (tx_enable_old)
-	      tx_axis_tvalid_dly <= 1'b1;
-	  else if (~tx_axis_tlast)
-	      tx_axis_tvalid_dly <= 1'b0;
-      end
- 
-   always @(posedge rx_clk)
-     if (rst_int)
-       begin
-          rx_addr_axis <= 'b0;
-          rx_dest_mac <= 'b0;
-       end
-     else
-       begin
-	  if (rx_axis_tvalid)
-            begin
-            rx_addr_axis <= rx_addr_axis + 1;
-            if (rx_addr_axis < 6)
-              rx_dest_mac <= {rx_dest_mac[39:0],rx_axis_tdata};
-            end
-	  if (rx_axis_tlast)
-            begin
-	        rx_length_axis[nextbuf] <= rx_addr_axis + 1;
-	        rx_addr_axis <= 'b0;
-            end
-      end
- 
-sgmii_soc sgmii_soc1
-  (
-   .clk_int(clk_int),
-   .rst_int(rst_int),
-   .eth_clk(eth_clk),
-   .sgmii_rxp(sgmii_rxp),
-   .sgmii_rxn(sgmii_rxn),
-   .sgmii_txp(sgmii_txp),
-   .sgmii_txn(sgmii_txn),
-   .sgmii_refclk_p(sgmii_refclk_p),
-   .sgmii_refclk_n(sgmii_refclk_n),
-   .phy_reset_n(phy_reset_n),
-   .mac_gmii_tx_en(mac_gmii_tx_en),
-   .rx_clk(rx_clk),
-   .tx_axis_tdata(tx_axis_tdata),
-   .tx_axis_tvalid(tx_axis_tvalid),
-   .tx_axis_tready(tx_axis_tready),
-   .tx_axis_tlast(tx_axis_tlast),
-   .tx_axis_tuser(tx_axis_tuser),
-   .rx_axis_tdata(rx_axis_tdata),
-   .rx_axis_tvalid(rx_axis_tvalid),
-   .rx_axis_tlast(rx_axis_tlast),
-   .rx_axis_tuser(rx_axis_tuser),
-   .rx_fcs_reg(rx_fcs_reg),
-   .tx_fcs_reg(tx_fcs_reg),
-   .pcspma_status(pcspma_status),
-   .gtrefclk_bufg_out(gtrefclk_bufg_o)
-);
+
+// ---- RPLR storage: 32 x 11 dual-port LUTRAM ------------------------------
+// (explicit RAM32X1D under yosys: nextpnr's whole-slice RAM32M clusters get
+// split by SA placement — same workaround as async_fifo storage)
+wire rplr_we = rx_pop & rx_has_tlast & rx_accept & rx_room;
+`ifdef YOSYS
+genvar grl;
+generate for (grl = 0; grl < 11; grl = grl + 1) begin : rplr
+    RAM32X1D #(.INIT(32'b0)) r (
+        .WCLK(msoc_clk), .WE(rplr_we), .D(rx_len[grl]),
+        .A0(nextbuf[0]), .A1(nextbuf[1]), .A2(nextbuf[2]),
+        .A3(nextbuf[3]), .A4(nextbuf[4]),
+        .DPRA0(core_lsu_addr_dly[3]), .DPRA1(core_lsu_addr_dly[4]),
+        .DPRA2(core_lsu_addr_dly[5]), .DPRA3(core_lsu_addr_dly[6]),
+        .DPRA4(core_lsu_addr_dly[7]),
+        .DPO(rx_length_rd[grl]), .SPO());
+end endgenerate
+`else
+logic [10:0] rx_length_axis[0:31];
+always @(posedge msoc_clk)
+    if (rplr_we)
+        rx_length_axis[nextbuf] <= rx_len;
+assign rx_length_rd = rx_length_axis[core_lsu_addr_dly[7:3]];
+`endif
 
 assign pcspma_status_o = pcspma_status;
-
-`ifdef ETH_ILA
-// ================================================================
-//  ILA — single debug core on eth_clk (125 MHz MAC domain)
-// ================================================================
-xlnx_ila eth_ila (
-    .clk(eth_clk),
-    .probe0(rx_axis_tdata),                                          //  [7:0] RX data
-    .probe1(tx_axis_tdata),                                          //  [7:0] TX data
-    .probe2({rx_axis_tvalid, rx_axis_tlast, rx_axis_tuser,           //  [7:0] AXI-stream flags
-             tx_axis_tvalid, tx_axis_tready, tx_axis_tlast,
-             mac_gmii_tx_en, tx_enable_i}),
-    .probe3({byte_sync, sync, avail, tx_busy}),                      //  [3:0] control status
-    .probe4(nextbuf[3:0]),                                            //  [3:0] RX buffer pointer (lower 4 of 5)
-    .probe5(firstbuf[3:0]),                                          //  [3:0] RX read pointer (lower 4 of 5)
-    .probe6(tx_frame_addr),                                          // [10:0] TX address
-    .probe7(pcspma_status)                                           // [15:0] PCS/PMA status_vector
-);
-`endif // ETH_ILA
 
 endmodule // framing_top_sgmii
 `default_nettype wire

@@ -1,0 +1,154 @@
+cpu_clk	cpu_bufg:O	hbeat_reg_0:C hbeat_reg_10:C hbeat_reg_11:C hbeat_reg_12:C hbeat_reg_13:C hbeat_reg_14:C hbeat_reg_15:C hbeat_reg_16:C hbeat_reg_17:C hbeat_reg_18:C hbeat_reg_19:C hbeat_reg_1:C hbeat_reg_20:C hbeat_reg_21:C hbeat_reg_22:C hbeat_reg_23:C hbeat_reg_24:C hbeat_reg_2:C hbeat_reg_3:C hbeat_reg_4:C hbeat_reg_5:C hbeat_reg_6:C hbeat_reg_7:C hbeat_reg_8:C hbeat_reg_9:C rcnt_reg_0:C rcnt_reg_1:C rcnt_reg_2:C rcnt_reg_3:C rcnt_reg_4:C rcnt_reg_5:C rxcnt_reg_0:C rxcnt_reg_1:C rxcnt_reg_2:C rxcnt_reg_3:C rxcnt_reg_4:C tick_reg_0:C tick_reg_10:C tick_reg_11:C tick_reg_12:C tick_reg_13:C tick_reg_14:C tick_reg_15:C tick_reg_16:C tick_reg_17:C tick_reg_18:C tick_reg_19:C tick_reg_1:C tick_reg_20:C tick_reg_21:C tick_reg_2:C tick_reg_3:C tick_reg_4:C tick_reg_5:C tick_reg_6:C tick_reg_7:C tick_reg_8:C tick_reg_9:C txb_reg_0:C txb_reg_1:C txb_reg_2:C txb_reg_3:C utx_stb_reg:C
+hbeat_0_i_2_n_0	hbeat_0_i_2:O	hbeat_reg_0_i_1:S0
+hbeat_reg_0_i_1_n_0	hbeat_reg_0_i_1:CO1	hbeat_reg_4_i_1:CI
+hbeat_reg_0_i_1_n_4	hbeat_reg_0_i_1:O3	hbeat_reg_3:D
+hbeat_reg_0_i_1_n_5	hbeat_reg_0_i_1:O2	hbeat_reg_2:D
+hbeat_reg_0_i_1_n_6	hbeat_reg_0_i_1:O1	hbeat_reg_1:D
+hbeat_reg_0_i_1_n_7	hbeat_reg_0_i_1:O0	hbeat_reg_0:D
+hbeat_reg_12_i_1_n_0	hbeat_reg_12_i_1:CO1	hbeat_reg_16_i_1:CI
+hbeat_reg_12_i_1_n_4	hbeat_reg_12_i_1:O3	hbeat_reg_15:D
+hbeat_reg_12_i_1_n_5	hbeat_reg_12_i_1:O2	hbeat_reg_14:D
+hbeat_reg_12_i_1_n_6	hbeat_reg_12_i_1:O1	hbeat_reg_13:D
+hbeat_reg_12_i_1_n_7	hbeat_reg_12_i_1:O0	hbeat_reg_12:D
+hbeat_reg_16_i_1_n_0	hbeat_reg_16_i_1:CO1	hbeat_reg_20_i_1:CI
+hbeat_reg_16_i_1_n_4	hbeat_reg_16_i_1:O3	hbeat_reg_19:D
+hbeat_reg_16_i_1_n_5	hbeat_reg_16_i_1:O2	hbeat_reg_18:D
+hbeat_reg_16_i_1_n_6	hbeat_reg_16_i_1:O1	hbeat_reg_17:D
+hbeat_reg_16_i_1_n_7	hbeat_reg_16_i_1:O0	hbeat_reg_16:D
+hbeat_reg_20_i_1_n_0	hbeat_reg_20_i_1:CO1	hbeat_reg_24_i_1:CI
+hbeat_reg_20_i_1_n_4	hbeat_reg_20_i_1:O3	hbeat_reg_23:D
+hbeat_reg_20_i_1_n_5	hbeat_reg_20_i_1:O2	hbeat_reg_22:D
+hbeat_reg_20_i_1_n_6	hbeat_reg_20_i_1:O1	hbeat_reg_21:D
+hbeat_reg_20_i_1_n_7	hbeat_reg_20_i_1:O0	hbeat_reg_20:D
+hbeat_reg_24_i_1_n_7	hbeat_reg_24_i_1:O0	hbeat_reg_24:D
+hbeat_reg_4_i_1_n_0	hbeat_reg_4_i_1:CO1	hbeat_reg_8_i_1:CI
+hbeat_reg_4_i_1_n_4	hbeat_reg_4_i_1:O3	hbeat_reg_7:D
+hbeat_reg_4_i_1_n_5	hbeat_reg_4_i_1:O2	hbeat_reg_6:D
+hbeat_reg_4_i_1_n_6	hbeat_reg_4_i_1:O1	hbeat_reg_5:D
+hbeat_reg_4_i_1_n_7	hbeat_reg_4_i_1:O0	hbeat_reg_4:D
+hbeat_reg_8_i_1_n_0	hbeat_reg_8_i_1:CO1	hbeat_reg_12_i_1:CI
+hbeat_reg_8_i_1_n_4	hbeat_reg_8_i_1:O3	hbeat_reg_11:D
+hbeat_reg_8_i_1_n_5	hbeat_reg_8_i_1:O2	hbeat_reg_10:D
+hbeat_reg_8_i_1_n_6	hbeat_reg_8_i_1:O1	hbeat_reg_9:D
+hbeat_reg_8_i_1_n_7	hbeat_reg_8_i_1:O0	hbeat_reg_8:D
+hbeat_reg_n_0__0	hbeat_reg_0:Q	hbeat_0_i_2:I0
+hbeat_reg_n_0__1	hbeat_reg_1:Q	hbeat_reg_0_i_1:S1
+hbeat_reg_n_0__10	hbeat_reg_10:Q	hbeat_reg_8_i_1:S2
+hbeat_reg_n_0__11	hbeat_reg_11:Q	hbeat_reg_8_i_1:S3
+hbeat_reg_n_0__12	hbeat_reg_12:Q	hbeat_reg_12_i_1:S0
+hbeat_reg_n_0__13	hbeat_reg_13:Q	hbeat_reg_12_i_1:S1
+hbeat_reg_n_0__14	hbeat_reg_14:Q	hbeat_reg_12_i_1:S2
+hbeat_reg_n_0__15	hbeat_reg_15:Q	hbeat_reg_12_i_1:S3
+hbeat_reg_n_0__16	hbeat_reg_16:Q	hbeat_reg_16_i_1:S0
+hbeat_reg_n_0__17	hbeat_reg_17:Q	hbeat_reg_16_i_1:S1
+hbeat_reg_n_0__18	hbeat_reg_18:Q	hbeat_reg_16_i_1:S2
+hbeat_reg_n_0__19	hbeat_reg_19:Q	hbeat_reg_16_i_1:S3
+hbeat_reg_n_0__2	hbeat_reg_2:Q	hbeat_reg_0_i_1:S2
+hbeat_reg_n_0__20	hbeat_reg_20:Q	hbeat_reg_20_i_1:S0
+hbeat_reg_n_0__21	hbeat_reg_21:Q	hbeat_reg_20_i_1:S1
+hbeat_reg_n_0__22	hbeat_reg_22:Q	hbeat_reg_20_i_1:S2
+hbeat_reg_n_0__23	hbeat_reg_23:Q	hbeat_reg_20_i_1:S3
+hbeat_reg_n_0__3	hbeat_reg_3:Q	hbeat_reg_0_i_1:S3
+hbeat_reg_n_0__4	hbeat_reg_4:Q	hbeat_reg_4_i_1:S0
+hbeat_reg_n_0__5	hbeat_reg_5:Q	hbeat_reg_4_i_1:S1
+hbeat_reg_n_0__6	hbeat_reg_6:Q	hbeat_reg_4_i_1:S2
+hbeat_reg_n_0__7	hbeat_reg_7:Q	hbeat_reg_4_i_1:S3
+hbeat_reg_n_0__8	hbeat_reg_8:Q	hbeat_reg_8_i_1:S0
+hbeat_reg_n_0__9	hbeat_reg_9:Q	hbeat_reg_8_i_1:S1
+led_0	led_OBUF_0_inst:O	PORT:led_0
+led_1	led_OBUF_1_inst:O	PORT:led_1
+led_2	led_OBUF_2_inst:O	PORT:led_2
+led_3	led_OBUF_3_inst:O	PORT:led_3
+led_4	led_OBUF_4_inst:O	PORT:led_4
+led_5	led_OBUF_5_inst:O	PORT:led_5
+led_6	led_OBUF_6_inst:O	PORT:led_6
+led_7	led_OBUF_7_inst:O	PORT:led_7
+led_OBUF_0	rxcnt_reg_0:Q	led_OBUF_0_inst:I rxcnt_0_i_2:I0 txb_reg_0:D
+led_OBUF_1	rxcnt_reg_1:Q	led_OBUF_1_inst:I rxcnt_reg_0_i_1:S1 txb_reg_1:D
+led_OBUF_2	rxcnt_reg_2:Q	led_OBUF_2_inst:I rxcnt_reg_0_i_1:S2 txb_reg_2:D
+led_OBUF_3	rxcnt_reg_3:Q	led_OBUF_3_inst:I rxcnt_reg_0_i_1:S3 txb_reg_3:D
+led_OBUF_4	rxcnt_reg_4:Q	led_OBUF_4_inst:I rxcnt_reg_4_i_1:S0
+led_OBUF_5	hbeat_reg_24:Q	hbeat_reg_24_i_1:S0 led_OBUF_5_inst:I
+led_OBUF_6	PORT:led_OBUF_6	led_OBUF_6_inst:I
+led_OBUF_7	PORT:led_OBUF_7	led_OBUF_7_inst:I rcnt_5_i_1:I1
+mmcm_clkout0	PORT:mmcm_clkout0	cpu_bufg:I
+p_0_in_0	rcnt_0_i_1:O	rcnt_reg_0:D
+p_0_in_1	rcnt_1_i_1:O	rcnt_reg_1:D
+p_0_in_2	rcnt_2_i_1:O	rcnt_reg_2:D
+p_0_in_3	rcnt_3_i_1:O	rcnt_reg_3:D
+p_0_in_4	rcnt_4_i_1:O	rcnt_reg_4:D
+p_0_in_5	rcnt_5_i_2:O	rcnt_reg_5:D
+rcnt_5_i_1_n_0	rcnt_5_i_1:O	rcnt_reg_0:R rcnt_reg_1:R rcnt_reg_2:R rcnt_reg_3:R rcnt_reg_4:R rcnt_reg_5:R
+rcnt_reg_0	rcnt_reg_0:Q	rcnt_0_i_1:I3 rcnt_1_i_1:I0 rcnt_2_i_1:I4 rcnt_3_i_1:I1 rcnt_4_i_1:I3 rcnt_5_i_2:I2
+rcnt_reg_1	rcnt_reg_1:Q	rcnt_0_i_1:I2 rcnt_1_i_1:I5 rcnt_2_i_1:I2 rcnt_3_i_1:I2 rcnt_4_i_1:I2 rcnt_5_i_2:I3
+rcnt_reg_2	rcnt_reg_2:Q	rcnt_0_i_1:I5 rcnt_1_i_1:I1 rcnt_2_i_1:I5 rcnt_3_i_1:I0 rcnt_4_i_1:I4 rcnt_5_i_2:I1
+rcnt_reg_3	rcnt_reg_3:Q	rcnt_0_i_1:I4 rcnt_1_i_1:I2 rcnt_2_i_1:I3 rcnt_3_i_1:I5 rcnt_4_i_1:I0 rcnt_5_i_2:I4
+rcnt_reg_4	rcnt_reg_4:Q	rcnt_0_i_1:I0 rcnt_1_i_1:I4 rcnt_2_i_1:I0 rcnt_3_i_1:I4 rcnt_4_i_1:I5 rcnt_5_i_2:I0
+rcnt_reg_5	rcnt_reg_5:Q	rcnt_0_i_1:I1 rcnt_1_i_1:I3 rcnt_2_i_1:I1 rcnt_3_i_1:I3 rcnt_4_i_1:I1 rcnt_5_i_2:I5
+rst	PORT:rst	rst_IBUF_inst:I
+rst_IBUF	rst_IBUF_inst:O	rcnt_5_i_1:I0
+rst_sync	PORT:rst_sync	rxcnt_reg_0:R rxcnt_reg_1:R rxcnt_reg_2:R rxcnt_reg_3:R rxcnt_reg_4:R tick_reg_0:R tick_reg_10:R tick_reg_11:R tick_reg_12:R tick_reg_13:R tick_reg_14:R tick_reg_15:R tick_reg_16:R tick_reg_17:R tick_reg_18:R tick_reg_19:R tick_reg_1:R tick_reg_20:R tick_reg_21:R tick_reg_2:R tick_reg_3:R tick_reg_4:R tick_reg_5:R tick_reg_6:R tick_reg_7:R tick_reg_8:R tick_reg_9:R utx_stb_reg:R
+rxcnt_0_i_2_n_0	rxcnt_0_i_2:O	rxcnt_reg_0_i_1:S0
+rxcnt_reg_0_i_1_n_0	rxcnt_reg_0_i_1:CO1	rxcnt_reg_4_i_1:CI
+rxcnt_reg_0_i_1_n_4	rxcnt_reg_0_i_1:O3	rxcnt_reg_3:D
+rxcnt_reg_0_i_1_n_5	rxcnt_reg_0_i_1:O2	rxcnt_reg_2:D
+rxcnt_reg_0_i_1_n_6	rxcnt_reg_0_i_1:O1	rxcnt_reg_1:D
+rxcnt_reg_0_i_1_n_7	rxcnt_reg_0_i_1:O0	rxcnt_reg_0:D
+rxcnt_reg_4_i_1_n_7	rxcnt_reg_4_i_1:O0	rxcnt_reg_4:D
+stb	PORT:stb	rxcnt_reg_0:CE rxcnt_reg_1:CE rxcnt_reg_2:CE rxcnt_reg_3:CE rxcnt_reg_4:CE
+sysclk_ibuf	PORT:sysclk_ibuf	sysclk_bufg:I
+tick_0_i_2_n_0	tick_0_i_2:O	tick_reg_0_i_1:S0
+tick_reg_0	tick_reg_0:Q	tick_0_i_2:I0 utx_stb_i_4:I1
+tick_reg_0_i_1_n_0	tick_reg_0_i_1:CO1	tick_reg_4_i_1:CI
+tick_reg_0_i_1_n_4	tick_reg_0_i_1:O3	tick_reg_3:D
+tick_reg_0_i_1_n_5	tick_reg_0_i_1:O2	tick_reg_2:D
+tick_reg_0_i_1_n_6	tick_reg_0_i_1:O1	tick_reg_1:D
+tick_reg_0_i_1_n_7	tick_reg_0_i_1:O0	tick_reg_0:D
+tick_reg_1	tick_reg_1:Q	tick_reg_0_i_1:S1 utx_stb_i_4:I0
+tick_reg_10	tick_reg_10:Q	tick_reg_8_i_1:S2 utx_stb_i_6:I1
+tick_reg_11	tick_reg_11:Q	tick_reg_8_i_1:S3 utx_stb_i_6:I0
+tick_reg_12	tick_reg_12:Q	tick_reg_12_i_1:S0
+tick_reg_12_i_1_n_0	tick_reg_12_i_1:CO1	tick_reg_16_i_1:CI
+tick_reg_12_i_1_n_4	tick_reg_12_i_1:O3	tick_reg_15:D
+tick_reg_12_i_1_n_5	tick_reg_12_i_1:O2	tick_reg_14:D
+tick_reg_12_i_1_n_6	tick_reg_12_i_1:O1	tick_reg_13:D
+tick_reg_12_i_1_n_7	tick_reg_12_i_1:O0	tick_reg_12:D
+tick_reg_13	tick_reg_13:Q	tick_reg_12_i_1:S1
+tick_reg_14	tick_reg_14:Q	tick_reg_12_i_1:S2
+tick_reg_15	tick_reg_15:Q	tick_reg_12_i_1:S3
+tick_reg_16	tick_reg_16:Q	tick_reg_16_i_1:S0 utx_stb_i_2:I4
+tick_reg_16_i_1_n_0	tick_reg_16_i_1:CO1	tick_reg_20_i_1:CI
+tick_reg_16_i_1_n_4	tick_reg_16_i_1:O3	tick_reg_19:D
+tick_reg_16_i_1_n_5	tick_reg_16_i_1:O2	tick_reg_18:D
+tick_reg_16_i_1_n_6	tick_reg_16_i_1:O1	tick_reg_17:D
+tick_reg_16_i_1_n_7	tick_reg_16_i_1:O0	tick_reg_16:D
+tick_reg_17	tick_reg_17:Q	tick_reg_16_i_1:S1 utx_stb_i_2:I5
+tick_reg_18	tick_reg_18:Q	tick_reg_16_i_1:S2 utx_stb_i_2:I3
+tick_reg_19	tick_reg_19:Q	tick_reg_16_i_1:S3 utx_stb_i_2:I2
+tick_reg_2	tick_reg_2:Q	tick_reg_0_i_1:S2 utx_stb_i_4:I3
+tick_reg_20	tick_reg_20:Q	tick_reg_20_i_1:S0 utx_stb_i_2:I0
+tick_reg_20_i_1_n_6	tick_reg_20_i_1:O1	tick_reg_21:D
+tick_reg_20_i_1_n_7	tick_reg_20_i_1:O0	tick_reg_20:D
+tick_reg_21	tick_reg_21:Q	tick_reg_20_i_1:S1 utx_stb_i_2:I1
+tick_reg_3	tick_reg_3:Q	tick_reg_0_i_1:S3 utx_stb_i_4:I2
+tick_reg_4	tick_reg_4:Q	tick_reg_4_i_1:S0 utx_stb_i_5:I3
+tick_reg_4_i_1_n_0	tick_reg_4_i_1:CO1	tick_reg_8_i_1:CI
+tick_reg_4_i_1_n_4	tick_reg_4_i_1:O3	tick_reg_7:D
+tick_reg_4_i_1_n_5	tick_reg_4_i_1:O2	tick_reg_6:D
+tick_reg_4_i_1_n_6	tick_reg_4_i_1:O1	tick_reg_5:D
+tick_reg_4_i_1_n_7	tick_reg_4_i_1:O0	tick_reg_4:D
+tick_reg_5	tick_reg_5:Q	tick_reg_4_i_1:S1 utx_stb_i_5:I2
+tick_reg_6	tick_reg_6:Q	tick_reg_4_i_1:S2 utx_stb_i_5:I1
+tick_reg_7	tick_reg_7:Q	tick_reg_4_i_1:S3 utx_stb_i_5:I0
+tick_reg_8	tick_reg_8:Q	tick_reg_8_i_1:S0 utx_stb_i_6:I3
+tick_reg_8_i_1_n_0	tick_reg_8_i_1:CO1	tick_reg_12_i_1:CI
+tick_reg_8_i_1_n_4	tick_reg_8_i_1:O3	tick_reg_11:D
+tick_reg_8_i_1_n_5	tick_reg_8_i_1:O2	tick_reg_10:D
+tick_reg_8_i_1_n_6	tick_reg_8_i_1:O1	tick_reg_9:D
+tick_reg_8_i_1_n_7	tick_reg_8_i_1:O0	tick_reg_8:D
+tick_reg_9	tick_reg_9:Q	tick_reg_8_i_1:S1 utx_stb_i_6:I2
+txb	PORT:txb	txb_reg_0:CE txb_reg_1:CE txb_reg_2:CE txb_reg_3:CE
+u_tx_n_2	PORT:u_tx_n_2	utx_stb_reg:D
+uart_rx	PORT:uart_rx	uart_rx_IBUF_inst:I
+uart_tx	uart_tx_OBUF_inst:O	PORT:uart_tx
+uart_tx_OBUF	PORT:uart_tx_OBUF	uart_tx_OBUF_inst:I

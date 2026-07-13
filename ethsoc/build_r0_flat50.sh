@@ -20,9 +20,13 @@ $YOSYS $ETH/r0_flat50_yosys.ys > /tmp/r0_flat50_yosys.log 2>&1 \
   || { echo "YOSYS FAILED"; tail -20 /tmp/r0_flat50_yosys.log; exit 1; }
 echo "yosys OK"
 python3 $ETH/stamp_placement.py /tmp/r0_ethsoc_flat50.json $ETH/placement_flat50.txt /tmp/r0_flat50_stamped.json
+# Avoid the 6 mis-encoded INT_R bounce-pip encodings (prjxray subset-alias bug,
+# convicted on ibex by on-board ddmin) that silently mis-route on silicon.
+PIP_BLACKLIST=${PIP_BLACKLIST:-$ROOT/ibexsoc/openflow/pip_blacklist_int_r_bounce.txt}
 flock /tmp/nextpnr.lock env NEXTPNR_ARC_MAX_VISIT=2000000 NEXTPNR_ALLOW_CO_5FF_CONTENTION=1 \
+  NEXTPNR_PIP_BLACKLIST=$PIP_BLACKLIST \
   $NEXTPNR --chipdb $CHIPDB --xdc $ETH/r0_pins.xdc --json /tmp/r0_flat50_stamped.json \
-    --fasm /tmp/r0_ethsoc_flat50.fasm --freq 50 --router router2 --placer sa \
+    --fasm /tmp/r0_ethsoc_flat50.fasm --write /tmp/r0_flat50_routed.json --freq 50 --router router2 --placer sa \
     > /tmp/r0_flat50_npnr.log 2>&1 || { echo "NEXTPNR FAILED"; tail -25 /tmp/r0_flat50_npnr.log; exit 1; }
 grep -iE "Max frequency|Routing complete|failed|unrouted" /tmp/r0_flat50_npnr.log | tail -5
 echo "nextpnr OK"

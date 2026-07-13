@@ -1,0 +1,10 @@
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/vc707_wireloop_netlist_y.v
+hierarchy -top wireloop
+flatten
+clean
+delete t:$scopeinfo
+blackbox =* wireloop %d
+stat
+write_json /tmp/r0_wireloop.json

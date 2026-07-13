@@ -1,0 +1,33 @@
+# ARP responder (arp_ctrl, CPU-free) on the frozen eth_macro — yosys phases.
+# Same three-phase structure as r0_reflectm.ys (see there for the whys).
+# ---- phase A: user synthesis -----------------------------------------------
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/xil_bb.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/eth_macro_bb.v
+read_verilog -DVC707 /home/jonathan/v7-johnson-demo/ethsoc/ramb16_compat.v
+read_verilog -sv -DVC707 /home/jonathan/v7-johnson-demo/ethsoc/dualmem64.sv
+read_verilog -sv /home/jonathan/v7-johnson-demo/ethsoc/framing_top_sgmii.sv
+read_verilog -sv /home/jonathan/v7-johnson-demo/ethsoc/arp_ctrl.sv
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/vc707_arpm.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/async_fifo.v
+synth_xilinx -top top -flatten -noiopad -nowidelut -nocarry
+clean
+delete t:$scopeinfo
+blackbox =* top %d
+write_json /tmp/arpm_user.json
+design -reset
+# ---- phase B: macro netlist pass-through ------------------------------------
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/xil_bb.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/gt_stubs.v
+delete RAM32M RAM64M
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/ram_m_structural.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/eth_macro_impl_ym.v
+hierarchy -top eth_macro
+proc
+flatten
+delete t:$scopeinfo
+blackbox =* eth_macro %d
+write_json /tmp/arpm_macro.json

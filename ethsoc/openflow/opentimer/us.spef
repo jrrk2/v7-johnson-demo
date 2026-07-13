@@ -1,0 +1,2189 @@
+*SPEF "IEEE 1481-1998"
+*DESIGN "open"
+*DATE "x"
+*VENDOR "x"
+*PROGRAM "route2spef"
+*VERSION "1.0"
+*DESIGN_FLOW ""
+*DIVIDER /
+*DELIMITER :
+*BUS_DELIMITER [ ]
+*T_UNIT 1 NS
+*C_UNIT 1 PF
+*R_UNIT 1 KOHM
+*L_UNIT 1 HENRY
+
+*D_NET cpu_clk 0.06300
+*CONN
+*I cpu_bufg:O O
+*I hbeat_reg_0:C I
+*I hbeat_reg_10:C I
+*I hbeat_reg_11:C I
+*I hbeat_reg_12:C I
+*I hbeat_reg_13:C I
+*I hbeat_reg_14:C I
+*I hbeat_reg_15:C I
+*I hbeat_reg_16:C I
+*I hbeat_reg_17:C I
+*I hbeat_reg_18:C I
+*I hbeat_reg_19:C I
+*I hbeat_reg_1:C I
+*I hbeat_reg_20:C I
+*I hbeat_reg_21:C I
+*I hbeat_reg_22:C I
+*I hbeat_reg_23:C I
+*I hbeat_reg_24:C I
+*I hbeat_reg_2:C I
+*I hbeat_reg_3:C I
+*I hbeat_reg_4:C I
+*I hbeat_reg_5:C I
+*I hbeat_reg_6:C I
+*I hbeat_reg_7:C I
+*I hbeat_reg_8:C I
+*I hbeat_reg_9:C I
+*I rcnt_reg_0:C I
+*I rcnt_reg_1:C I
+*I rcnt_reg_2:C I
+*I rcnt_reg_3:C I
+*I rcnt_reg_4:C I
+*I rcnt_reg_5:C I
+*I rxcnt_reg_0:C I
+*I rxcnt_reg_1:C I
+*I rxcnt_reg_2:C I
+*I rxcnt_reg_3:C I
+*I rxcnt_reg_4:C I
+*I tick_reg_0:C I
+*I tick_reg_10:C I
+*I tick_reg_11:C I
+*I tick_reg_12:C I
+*I tick_reg_13:C I
+*I tick_reg_14:C I
+*I tick_reg_15:C I
+*I tick_reg_16:C I
+*I tick_reg_17:C I
+*I tick_reg_18:C I
+*I tick_reg_19:C I
+*I tick_reg_1:C I
+*I tick_reg_20:C I
+*I tick_reg_21:C I
+*I tick_reg_2:C I
+*I tick_reg_3:C I
+*I tick_reg_4:C I
+*I tick_reg_5:C I
+*I tick_reg_6:C I
+*I tick_reg_7:C I
+*I tick_reg_8:C I
+*I tick_reg_9:C I
+*I txb_reg_0:C I
+*I txb_reg_1:C I
+*I txb_reg_2:C I
+*I txb_reg_3:C I
+*I utx_stb_reg:C I
+*CAP
+1 cpu_bufg:O 0.0
+2 hbeat_reg_0:C 0.00100
+3 hbeat_reg_10:C 0.00100
+4 hbeat_reg_11:C 0.00100
+5 hbeat_reg_12:C 0.00100
+6 hbeat_reg_13:C 0.00100
+7 hbeat_reg_14:C 0.00100
+8 hbeat_reg_15:C 0.00100
+9 hbeat_reg_16:C 0.00100
+10 hbeat_reg_17:C 0.00100
+11 hbeat_reg_18:C 0.00100
+12 hbeat_reg_19:C 0.00100
+13 hbeat_reg_1:C 0.00100
+14 hbeat_reg_20:C 0.00100
+15 hbeat_reg_21:C 0.00100
+16 hbeat_reg_22:C 0.00100
+17 hbeat_reg_23:C 0.00100
+18 hbeat_reg_24:C 0.00100
+19 hbeat_reg_2:C 0.00100
+20 hbeat_reg_3:C 0.00100
+21 hbeat_reg_4:C 0.00100
+22 hbeat_reg_5:C 0.00100
+23 hbeat_reg_6:C 0.00100
+24 hbeat_reg_7:C 0.00100
+25 hbeat_reg_8:C 0.00100
+26 hbeat_reg_9:C 0.00100
+27 rcnt_reg_0:C 0.00100
+28 rcnt_reg_1:C 0.00100
+29 rcnt_reg_2:C 0.00100
+30 rcnt_reg_3:C 0.00100
+31 rcnt_reg_4:C 0.00100
+32 rcnt_reg_5:C 0.00100
+33 rxcnt_reg_0:C 0.00100
+34 rxcnt_reg_1:C 0.00100
+35 rxcnt_reg_2:C 0.00100
+36 rxcnt_reg_3:C 0.00100
+37 rxcnt_reg_4:C 0.00100
+38 tick_reg_0:C 0.00100
+39 tick_reg_10:C 0.00100
+40 tick_reg_11:C 0.00100
+41 tick_reg_12:C 0.00100
+42 tick_reg_13:C 0.00100
+43 tick_reg_14:C 0.00100
+44 tick_reg_15:C 0.00100
+45 tick_reg_16:C 0.00100
+46 tick_reg_17:C 0.00100
+47 tick_reg_18:C 0.00100
+48 tick_reg_19:C 0.00100
+49 tick_reg_1:C 0.00100
+50 tick_reg_20:C 0.00100
+51 tick_reg_21:C 0.00100
+52 tick_reg_2:C 0.00100
+53 tick_reg_3:C 0.00100
+54 tick_reg_4:C 0.00100
+55 tick_reg_5:C 0.00100
+56 tick_reg_6:C 0.00100
+57 tick_reg_7:C 0.00100
+58 tick_reg_8:C 0.00100
+59 tick_reg_9:C 0.00100
+60 txb_reg_0:C 0.00100
+61 txb_reg_1:C 0.00100
+62 txb_reg_2:C 0.00100
+63 txb_reg_3:C 0.00100
+64 utx_stb_reg:C 0.00100
+*RES
+1 cpu_bufg:O hbeat_reg_0:C 526.3636
+2 cpu_bufg:O hbeat_reg_10:C 526.3636
+3 cpu_bufg:O hbeat_reg_11:C 526.3636
+4 cpu_bufg:O hbeat_reg_12:C 526.3636
+5 cpu_bufg:O hbeat_reg_13:C 526.3636
+6 cpu_bufg:O hbeat_reg_14:C 526.3636
+7 cpu_bufg:O hbeat_reg_15:C 526.3636
+8 cpu_bufg:O hbeat_reg_16:C 526.3636
+9 cpu_bufg:O hbeat_reg_17:C 526.3636
+10 cpu_bufg:O hbeat_reg_18:C 526.3636
+11 cpu_bufg:O hbeat_reg_19:C 526.3636
+12 cpu_bufg:O hbeat_reg_1:C 526.3636
+13 cpu_bufg:O hbeat_reg_20:C 526.3636
+14 cpu_bufg:O hbeat_reg_21:C 526.3636
+15 cpu_bufg:O hbeat_reg_22:C 526.3636
+16 cpu_bufg:O hbeat_reg_23:C 526.3636
+17 cpu_bufg:O hbeat_reg_24:C 526.3636
+18 cpu_bufg:O hbeat_reg_2:C 526.3636
+19 cpu_bufg:O hbeat_reg_3:C 526.3636
+20 cpu_bufg:O hbeat_reg_4:C 526.3636
+21 cpu_bufg:O hbeat_reg_5:C 526.3636
+22 cpu_bufg:O hbeat_reg_6:C 526.3636
+23 cpu_bufg:O hbeat_reg_7:C 526.3636
+24 cpu_bufg:O hbeat_reg_8:C 526.3636
+25 cpu_bufg:O hbeat_reg_9:C 526.3636
+26 cpu_bufg:O rcnt_reg_0:C 526.3636
+27 cpu_bufg:O rcnt_reg_1:C 526.3636
+28 cpu_bufg:O rcnt_reg_2:C 526.3636
+29 cpu_bufg:O rcnt_reg_3:C 526.3636
+30 cpu_bufg:O rcnt_reg_4:C 526.3636
+31 cpu_bufg:O rcnt_reg_5:C 526.3636
+32 cpu_bufg:O rxcnt_reg_0:C 526.3636
+33 cpu_bufg:O rxcnt_reg_1:C 526.3636
+34 cpu_bufg:O rxcnt_reg_2:C 526.3636
+35 cpu_bufg:O rxcnt_reg_3:C 526.3636
+36 cpu_bufg:O rxcnt_reg_4:C 526.3636
+37 cpu_bufg:O tick_reg_0:C 526.3636
+38 cpu_bufg:O tick_reg_10:C 526.3636
+39 cpu_bufg:O tick_reg_11:C 526.3636
+40 cpu_bufg:O tick_reg_12:C 526.3636
+41 cpu_bufg:O tick_reg_13:C 526.3636
+42 cpu_bufg:O tick_reg_14:C 526.3636
+43 cpu_bufg:O tick_reg_15:C 526.3636
+44 cpu_bufg:O tick_reg_16:C 526.3636
+45 cpu_bufg:O tick_reg_17:C 526.3636
+46 cpu_bufg:O tick_reg_18:C 526.3636
+47 cpu_bufg:O tick_reg_19:C 526.3636
+48 cpu_bufg:O tick_reg_1:C 526.3636
+49 cpu_bufg:O tick_reg_20:C 526.3636
+50 cpu_bufg:O tick_reg_21:C 526.3636
+51 cpu_bufg:O tick_reg_2:C 526.3636
+52 cpu_bufg:O tick_reg_3:C 526.3636
+53 cpu_bufg:O tick_reg_4:C 526.3636
+54 cpu_bufg:O tick_reg_5:C 526.3636
+55 cpu_bufg:O tick_reg_6:C 526.3636
+56 cpu_bufg:O tick_reg_7:C 526.3636
+57 cpu_bufg:O tick_reg_8:C 526.3636
+58 cpu_bufg:O tick_reg_9:C 526.3636
+59 cpu_bufg:O txb_reg_0:C 526.3636
+60 cpu_bufg:O txb_reg_1:C 526.3636
+61 cpu_bufg:O txb_reg_2:C 526.3636
+62 cpu_bufg:O txb_reg_3:C 526.3636
+63 cpu_bufg:O utx_stb_reg:C 526.3636
+*END
+
+*D_NET hbeat_0_i_2_n_0 0.00100
+*CONN
+*I hbeat_0_i_2:O O
+*I hbeat_reg_0_i_1:S0 I
+*CAP
+1 hbeat_0_i_2:O 0.0
+2 hbeat_reg_0_i_1:S0 0.00100
+*RES
+1 hbeat_0_i_2:O hbeat_reg_0_i_1:S0 526.3636
+*END
+
+*D_NET hbeat_reg_0_i_1_n_0 0.00100
+*CONN
+*I hbeat_reg_0_i_1:CO1 O
+*I hbeat_reg_4_i_1:CI I
+*CAP
+1 hbeat_reg_0_i_1:CO1 0.0
+2 hbeat_reg_4_i_1:CI 0.00100
+*RES
+1 hbeat_reg_0_i_1:CO1 hbeat_reg_4_i_1:CI 526.3636
+*END
+
+*D_NET hbeat_reg_0_i_1_n_4 0.00100
+*CONN
+*I hbeat_reg_0_i_1:O3 O
+*I hbeat_reg_3:D I
+*CAP
+1 hbeat_reg_0_i_1:O3 0.0
+2 hbeat_reg_3:D 0.00100
+*RES
+1 hbeat_reg_0_i_1:O3 hbeat_reg_3:D 526.3636
+*END
+
+*D_NET hbeat_reg_0_i_1_n_5 0.00100
+*CONN
+*I hbeat_reg_0_i_1:O2 O
+*I hbeat_reg_2:D I
+*CAP
+1 hbeat_reg_0_i_1:O2 0.0
+2 hbeat_reg_2:D 0.00100
+*RES
+1 hbeat_reg_0_i_1:O2 hbeat_reg_2:D 526.3636
+*END
+
+*D_NET hbeat_reg_0_i_1_n_6 0.00100
+*CONN
+*I hbeat_reg_0_i_1:O1 O
+*I hbeat_reg_1:D I
+*CAP
+1 hbeat_reg_0_i_1:O1 0.0
+2 hbeat_reg_1:D 0.00100
+*RES
+1 hbeat_reg_0_i_1:O1 hbeat_reg_1:D 526.3636
+*END
+
+*D_NET hbeat_reg_0_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_0_i_1:O0 O
+*I hbeat_reg_0:D I
+*CAP
+1 hbeat_reg_0_i_1:O0 0.0
+2 hbeat_reg_0:D 0.00100
+*RES
+1 hbeat_reg_0_i_1:O0 hbeat_reg_0:D 526.3636
+*END
+
+*D_NET hbeat_reg_12_i_1_n_0 0.00100
+*CONN
+*I hbeat_reg_12_i_1:CO1 O
+*I hbeat_reg_16_i_1:CI I
+*CAP
+1 hbeat_reg_12_i_1:CO1 0.0
+2 hbeat_reg_16_i_1:CI 0.00100
+*RES
+1 hbeat_reg_12_i_1:CO1 hbeat_reg_16_i_1:CI 526.3636
+*END
+
+*D_NET hbeat_reg_12_i_1_n_4 0.00100
+*CONN
+*I hbeat_reg_12_i_1:O3 O
+*I hbeat_reg_15:D I
+*CAP
+1 hbeat_reg_12_i_1:O3 0.0
+2 hbeat_reg_15:D 0.00100
+*RES
+1 hbeat_reg_12_i_1:O3 hbeat_reg_15:D 526.3636
+*END
+
+*D_NET hbeat_reg_12_i_1_n_5 0.00100
+*CONN
+*I hbeat_reg_12_i_1:O2 O
+*I hbeat_reg_14:D I
+*CAP
+1 hbeat_reg_12_i_1:O2 0.0
+2 hbeat_reg_14:D 0.00100
+*RES
+1 hbeat_reg_12_i_1:O2 hbeat_reg_14:D 526.3636
+*END
+
+*D_NET hbeat_reg_12_i_1_n_6 0.00100
+*CONN
+*I hbeat_reg_12_i_1:O1 O
+*I hbeat_reg_13:D I
+*CAP
+1 hbeat_reg_12_i_1:O1 0.0
+2 hbeat_reg_13:D 0.00100
+*RES
+1 hbeat_reg_12_i_1:O1 hbeat_reg_13:D 526.3636
+*END
+
+*D_NET hbeat_reg_12_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_12_i_1:O0 O
+*I hbeat_reg_12:D I
+*CAP
+1 hbeat_reg_12_i_1:O0 0.0
+2 hbeat_reg_12:D 0.00100
+*RES
+1 hbeat_reg_12_i_1:O0 hbeat_reg_12:D 526.3636
+*END
+
+*D_NET hbeat_reg_16_i_1_n_0 0.00100
+*CONN
+*I hbeat_reg_16_i_1:CO1 O
+*I hbeat_reg_20_i_1:CI I
+*CAP
+1 hbeat_reg_16_i_1:CO1 0.0
+2 hbeat_reg_20_i_1:CI 0.00100
+*RES
+1 hbeat_reg_16_i_1:CO1 hbeat_reg_20_i_1:CI 526.3636
+*END
+
+*D_NET hbeat_reg_16_i_1_n_4 0.00100
+*CONN
+*I hbeat_reg_16_i_1:O3 O
+*I hbeat_reg_19:D I
+*CAP
+1 hbeat_reg_16_i_1:O3 0.0
+2 hbeat_reg_19:D 0.00100
+*RES
+1 hbeat_reg_16_i_1:O3 hbeat_reg_19:D 526.3636
+*END
+
+*D_NET hbeat_reg_16_i_1_n_5 0.00100
+*CONN
+*I hbeat_reg_16_i_1:O2 O
+*I hbeat_reg_18:D I
+*CAP
+1 hbeat_reg_16_i_1:O2 0.0
+2 hbeat_reg_18:D 0.00100
+*RES
+1 hbeat_reg_16_i_1:O2 hbeat_reg_18:D 526.3636
+*END
+
+*D_NET hbeat_reg_16_i_1_n_6 0.00100
+*CONN
+*I hbeat_reg_16_i_1:O1 O
+*I hbeat_reg_17:D I
+*CAP
+1 hbeat_reg_16_i_1:O1 0.0
+2 hbeat_reg_17:D 0.00100
+*RES
+1 hbeat_reg_16_i_1:O1 hbeat_reg_17:D 526.3636
+*END
+
+*D_NET hbeat_reg_16_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_16_i_1:O0 O
+*I hbeat_reg_16:D I
+*CAP
+1 hbeat_reg_16_i_1:O0 0.0
+2 hbeat_reg_16:D 0.00100
+*RES
+1 hbeat_reg_16_i_1:O0 hbeat_reg_16:D 526.3636
+*END
+
+*D_NET hbeat_reg_20_i_1_n_0 0.00100
+*CONN
+*I hbeat_reg_20_i_1:CO1 O
+*I hbeat_reg_24_i_1:CI I
+*CAP
+1 hbeat_reg_20_i_1:CO1 0.0
+2 hbeat_reg_24_i_1:CI 0.00100
+*RES
+1 hbeat_reg_20_i_1:CO1 hbeat_reg_24_i_1:CI 526.3636
+*END
+
+*D_NET hbeat_reg_20_i_1_n_4 0.00100
+*CONN
+*I hbeat_reg_20_i_1:O3 O
+*I hbeat_reg_23:D I
+*CAP
+1 hbeat_reg_20_i_1:O3 0.0
+2 hbeat_reg_23:D 0.00100
+*RES
+1 hbeat_reg_20_i_1:O3 hbeat_reg_23:D 526.3636
+*END
+
+*D_NET hbeat_reg_20_i_1_n_5 0.00100
+*CONN
+*I hbeat_reg_20_i_1:O2 O
+*I hbeat_reg_22:D I
+*CAP
+1 hbeat_reg_20_i_1:O2 0.0
+2 hbeat_reg_22:D 0.00100
+*RES
+1 hbeat_reg_20_i_1:O2 hbeat_reg_22:D 526.3636
+*END
+
+*D_NET hbeat_reg_20_i_1_n_6 0.00100
+*CONN
+*I hbeat_reg_20_i_1:O1 O
+*I hbeat_reg_21:D I
+*CAP
+1 hbeat_reg_20_i_1:O1 0.0
+2 hbeat_reg_21:D 0.00100
+*RES
+1 hbeat_reg_20_i_1:O1 hbeat_reg_21:D 526.3636
+*END
+
+*D_NET hbeat_reg_20_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_20_i_1:O0 O
+*I hbeat_reg_20:D I
+*CAP
+1 hbeat_reg_20_i_1:O0 0.0
+2 hbeat_reg_20:D 0.00100
+*RES
+1 hbeat_reg_20_i_1:O0 hbeat_reg_20:D 526.3636
+*END
+
+*D_NET hbeat_reg_24_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_24_i_1:O0 O
+*I hbeat_reg_24:D I
+*CAP
+1 hbeat_reg_24_i_1:O0 0.0
+2 hbeat_reg_24:D 0.00100
+*RES
+1 hbeat_reg_24_i_1:O0 hbeat_reg_24:D 526.3636
+*END
+
+*D_NET hbeat_reg_4_i_1_n_0 0.00100
+*CONN
+*I hbeat_reg_4_i_1:CO1 O
+*I hbeat_reg_8_i_1:CI I
+*CAP
+1 hbeat_reg_4_i_1:CO1 0.0
+2 hbeat_reg_8_i_1:CI 0.00100
+*RES
+1 hbeat_reg_4_i_1:CO1 hbeat_reg_8_i_1:CI 526.3636
+*END
+
+*D_NET hbeat_reg_4_i_1_n_4 0.00100
+*CONN
+*I hbeat_reg_4_i_1:O3 O
+*I hbeat_reg_7:D I
+*CAP
+1 hbeat_reg_4_i_1:O3 0.0
+2 hbeat_reg_7:D 0.00100
+*RES
+1 hbeat_reg_4_i_1:O3 hbeat_reg_7:D 526.3636
+*END
+
+*D_NET hbeat_reg_4_i_1_n_5 0.00100
+*CONN
+*I hbeat_reg_4_i_1:O2 O
+*I hbeat_reg_6:D I
+*CAP
+1 hbeat_reg_4_i_1:O2 0.0
+2 hbeat_reg_6:D 0.00100
+*RES
+1 hbeat_reg_4_i_1:O2 hbeat_reg_6:D 526.3636
+*END
+
+*D_NET hbeat_reg_4_i_1_n_6 0.00100
+*CONN
+*I hbeat_reg_4_i_1:O1 O
+*I hbeat_reg_5:D I
+*CAP
+1 hbeat_reg_4_i_1:O1 0.0
+2 hbeat_reg_5:D 0.00100
+*RES
+1 hbeat_reg_4_i_1:O1 hbeat_reg_5:D 526.3636
+*END
+
+*D_NET hbeat_reg_4_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_4_i_1:O0 O
+*I hbeat_reg_4:D I
+*CAP
+1 hbeat_reg_4_i_1:O0 0.0
+2 hbeat_reg_4:D 0.00100
+*RES
+1 hbeat_reg_4_i_1:O0 hbeat_reg_4:D 526.3636
+*END
+
+*D_NET hbeat_reg_8_i_1_n_0 0.00100
+*CONN
+*I hbeat_reg_8_i_1:CO1 O
+*I hbeat_reg_12_i_1:CI I
+*CAP
+1 hbeat_reg_8_i_1:CO1 0.0
+2 hbeat_reg_12_i_1:CI 0.00100
+*RES
+1 hbeat_reg_8_i_1:CO1 hbeat_reg_12_i_1:CI 526.3636
+*END
+
+*D_NET hbeat_reg_8_i_1_n_4 0.00100
+*CONN
+*I hbeat_reg_8_i_1:O3 O
+*I hbeat_reg_11:D I
+*CAP
+1 hbeat_reg_8_i_1:O3 0.0
+2 hbeat_reg_11:D 0.00100
+*RES
+1 hbeat_reg_8_i_1:O3 hbeat_reg_11:D 526.3636
+*END
+
+*D_NET hbeat_reg_8_i_1_n_5 0.00100
+*CONN
+*I hbeat_reg_8_i_1:O2 O
+*I hbeat_reg_10:D I
+*CAP
+1 hbeat_reg_8_i_1:O2 0.0
+2 hbeat_reg_10:D 0.00100
+*RES
+1 hbeat_reg_8_i_1:O2 hbeat_reg_10:D 526.3636
+*END
+
+*D_NET hbeat_reg_8_i_1_n_6 0.00100
+*CONN
+*I hbeat_reg_8_i_1:O1 O
+*I hbeat_reg_9:D I
+*CAP
+1 hbeat_reg_8_i_1:O1 0.0
+2 hbeat_reg_9:D 0.00100
+*RES
+1 hbeat_reg_8_i_1:O1 hbeat_reg_9:D 526.3636
+*END
+
+*D_NET hbeat_reg_8_i_1_n_7 0.00100
+*CONN
+*I hbeat_reg_8_i_1:O0 O
+*I hbeat_reg_8:D I
+*CAP
+1 hbeat_reg_8_i_1:O0 0.0
+2 hbeat_reg_8:D 0.00100
+*RES
+1 hbeat_reg_8_i_1:O0 hbeat_reg_8:D 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__0 0.00100
+*CONN
+*I hbeat_reg_0:Q O
+*I hbeat_0_i_2:I0 I
+*CAP
+1 hbeat_reg_0:Q 0.0
+2 hbeat_0_i_2:I0 0.00100
+*RES
+1 hbeat_reg_0:Q hbeat_0_i_2:I0 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__1 0.00100
+*CONN
+*I hbeat_reg_1:Q O
+*I hbeat_reg_0_i_1:S1 I
+*CAP
+1 hbeat_reg_1:Q 0.0
+2 hbeat_reg_0_i_1:S1 0.00100
+*RES
+1 hbeat_reg_1:Q hbeat_reg_0_i_1:S1 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__10 0.00100
+*CONN
+*I hbeat_reg_10:Q O
+*I hbeat_reg_8_i_1:S2 I
+*CAP
+1 hbeat_reg_10:Q 0.0
+2 hbeat_reg_8_i_1:S2 0.00100
+*RES
+1 hbeat_reg_10:Q hbeat_reg_8_i_1:S2 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__11 0.00100
+*CONN
+*I hbeat_reg_11:Q O
+*I hbeat_reg_8_i_1:S3 I
+*CAP
+1 hbeat_reg_11:Q 0.0
+2 hbeat_reg_8_i_1:S3 0.00100
+*RES
+1 hbeat_reg_11:Q hbeat_reg_8_i_1:S3 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__12 0.00100
+*CONN
+*I hbeat_reg_12:Q O
+*I hbeat_reg_12_i_1:S0 I
+*CAP
+1 hbeat_reg_12:Q 0.0
+2 hbeat_reg_12_i_1:S0 0.00100
+*RES
+1 hbeat_reg_12:Q hbeat_reg_12_i_1:S0 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__13 0.00100
+*CONN
+*I hbeat_reg_13:Q O
+*I hbeat_reg_12_i_1:S1 I
+*CAP
+1 hbeat_reg_13:Q 0.0
+2 hbeat_reg_12_i_1:S1 0.00100
+*RES
+1 hbeat_reg_13:Q hbeat_reg_12_i_1:S1 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__14 0.00100
+*CONN
+*I hbeat_reg_14:Q O
+*I hbeat_reg_12_i_1:S2 I
+*CAP
+1 hbeat_reg_14:Q 0.0
+2 hbeat_reg_12_i_1:S2 0.00100
+*RES
+1 hbeat_reg_14:Q hbeat_reg_12_i_1:S2 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__15 0.00100
+*CONN
+*I hbeat_reg_15:Q O
+*I hbeat_reg_12_i_1:S3 I
+*CAP
+1 hbeat_reg_15:Q 0.0
+2 hbeat_reg_12_i_1:S3 0.00100
+*RES
+1 hbeat_reg_15:Q hbeat_reg_12_i_1:S3 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__16 0.00100
+*CONN
+*I hbeat_reg_16:Q O
+*I hbeat_reg_16_i_1:S0 I
+*CAP
+1 hbeat_reg_16:Q 0.0
+2 hbeat_reg_16_i_1:S0 0.00100
+*RES
+1 hbeat_reg_16:Q hbeat_reg_16_i_1:S0 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__17 0.00100
+*CONN
+*I hbeat_reg_17:Q O
+*I hbeat_reg_16_i_1:S1 I
+*CAP
+1 hbeat_reg_17:Q 0.0
+2 hbeat_reg_16_i_1:S1 0.00100
+*RES
+1 hbeat_reg_17:Q hbeat_reg_16_i_1:S1 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__18 0.00100
+*CONN
+*I hbeat_reg_18:Q O
+*I hbeat_reg_16_i_1:S2 I
+*CAP
+1 hbeat_reg_18:Q 0.0
+2 hbeat_reg_16_i_1:S2 0.00100
+*RES
+1 hbeat_reg_18:Q hbeat_reg_16_i_1:S2 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__19 0.00100
+*CONN
+*I hbeat_reg_19:Q O
+*I hbeat_reg_16_i_1:S3 I
+*CAP
+1 hbeat_reg_19:Q 0.0
+2 hbeat_reg_16_i_1:S3 0.00100
+*RES
+1 hbeat_reg_19:Q hbeat_reg_16_i_1:S3 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__2 0.00100
+*CONN
+*I hbeat_reg_2:Q O
+*I hbeat_reg_0_i_1:S2 I
+*CAP
+1 hbeat_reg_2:Q 0.0
+2 hbeat_reg_0_i_1:S2 0.00100
+*RES
+1 hbeat_reg_2:Q hbeat_reg_0_i_1:S2 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__20 0.00100
+*CONN
+*I hbeat_reg_20:Q O
+*I hbeat_reg_20_i_1:S0 I
+*CAP
+1 hbeat_reg_20:Q 0.0
+2 hbeat_reg_20_i_1:S0 0.00100
+*RES
+1 hbeat_reg_20:Q hbeat_reg_20_i_1:S0 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__21 0.00100
+*CONN
+*I hbeat_reg_21:Q O
+*I hbeat_reg_20_i_1:S1 I
+*CAP
+1 hbeat_reg_21:Q 0.0
+2 hbeat_reg_20_i_1:S1 0.00100
+*RES
+1 hbeat_reg_21:Q hbeat_reg_20_i_1:S1 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__22 0.00100
+*CONN
+*I hbeat_reg_22:Q O
+*I hbeat_reg_20_i_1:S2 I
+*CAP
+1 hbeat_reg_22:Q 0.0
+2 hbeat_reg_20_i_1:S2 0.00100
+*RES
+1 hbeat_reg_22:Q hbeat_reg_20_i_1:S2 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__23 0.00100
+*CONN
+*I hbeat_reg_23:Q O
+*I hbeat_reg_20_i_1:S3 I
+*CAP
+1 hbeat_reg_23:Q 0.0
+2 hbeat_reg_20_i_1:S3 0.00100
+*RES
+1 hbeat_reg_23:Q hbeat_reg_20_i_1:S3 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__3 0.00100
+*CONN
+*I hbeat_reg_3:Q O
+*I hbeat_reg_0_i_1:S3 I
+*CAP
+1 hbeat_reg_3:Q 0.0
+2 hbeat_reg_0_i_1:S3 0.00100
+*RES
+1 hbeat_reg_3:Q hbeat_reg_0_i_1:S3 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__4 0.00100
+*CONN
+*I hbeat_reg_4:Q O
+*I hbeat_reg_4_i_1:S0 I
+*CAP
+1 hbeat_reg_4:Q 0.0
+2 hbeat_reg_4_i_1:S0 0.00100
+*RES
+1 hbeat_reg_4:Q hbeat_reg_4_i_1:S0 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__5 0.00100
+*CONN
+*I hbeat_reg_5:Q O
+*I hbeat_reg_4_i_1:S1 I
+*CAP
+1 hbeat_reg_5:Q 0.0
+2 hbeat_reg_4_i_1:S1 0.00100
+*RES
+1 hbeat_reg_5:Q hbeat_reg_4_i_1:S1 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__6 0.00100
+*CONN
+*I hbeat_reg_6:Q O
+*I hbeat_reg_4_i_1:S2 I
+*CAP
+1 hbeat_reg_6:Q 0.0
+2 hbeat_reg_4_i_1:S2 0.00100
+*RES
+1 hbeat_reg_6:Q hbeat_reg_4_i_1:S2 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__7 0.00100
+*CONN
+*I hbeat_reg_7:Q O
+*I hbeat_reg_4_i_1:S3 I
+*CAP
+1 hbeat_reg_7:Q 0.0
+2 hbeat_reg_4_i_1:S3 0.00100
+*RES
+1 hbeat_reg_7:Q hbeat_reg_4_i_1:S3 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__8 0.00100
+*CONN
+*I hbeat_reg_8:Q O
+*I hbeat_reg_8_i_1:S0 I
+*CAP
+1 hbeat_reg_8:Q 0.0
+2 hbeat_reg_8_i_1:S0 0.00100
+*RES
+1 hbeat_reg_8:Q hbeat_reg_8_i_1:S0 526.3636
+*END
+
+*D_NET hbeat_reg_n_0__9 0.00100
+*CONN
+*I hbeat_reg_9:Q O
+*I hbeat_reg_8_i_1:S1 I
+*CAP
+1 hbeat_reg_9:Q 0.0
+2 hbeat_reg_8_i_1:S1 0.00100
+*RES
+1 hbeat_reg_9:Q hbeat_reg_8_i_1:S1 526.3636
+*END
+
+*D_NET led_0 0.00100
+*CONN
+*I led_OBUF_0_inst:O O
+*I led_0 I
+*CAP
+1 led_OBUF_0_inst:O 0.0
+2 led_0 0.00100
+*RES
+1 led_OBUF_0_inst:O led_0 526.3636
+*END
+
+*D_NET led_1 0.00100
+*CONN
+*I led_OBUF_1_inst:O O
+*I led_1 I
+*CAP
+1 led_OBUF_1_inst:O 0.0
+2 led_1 0.00100
+*RES
+1 led_OBUF_1_inst:O led_1 526.3636
+*END
+
+*D_NET led_2 0.00100
+*CONN
+*I led_OBUF_2_inst:O O
+*I led_2 I
+*CAP
+1 led_OBUF_2_inst:O 0.0
+2 led_2 0.00100
+*RES
+1 led_OBUF_2_inst:O led_2 526.3636
+*END
+
+*D_NET led_3 0.00100
+*CONN
+*I led_OBUF_3_inst:O O
+*I led_3 I
+*CAP
+1 led_OBUF_3_inst:O 0.0
+2 led_3 0.00100
+*RES
+1 led_OBUF_3_inst:O led_3 526.3636
+*END
+
+*D_NET led_4 0.00100
+*CONN
+*I led_OBUF_4_inst:O O
+*I led_4 I
+*CAP
+1 led_OBUF_4_inst:O 0.0
+2 led_4 0.00100
+*RES
+1 led_OBUF_4_inst:O led_4 526.3636
+*END
+
+*D_NET led_5 0.00100
+*CONN
+*I led_OBUF_5_inst:O O
+*I led_5 I
+*CAP
+1 led_OBUF_5_inst:O 0.0
+2 led_5 0.00100
+*RES
+1 led_OBUF_5_inst:O led_5 526.3636
+*END
+
+*D_NET led_6 0.00100
+*CONN
+*I led_OBUF_6_inst:O O
+*I led_6 I
+*CAP
+1 led_OBUF_6_inst:O 0.0
+2 led_6 0.00100
+*RES
+1 led_OBUF_6_inst:O led_6 526.3636
+*END
+
+*D_NET led_7 0.00100
+*CONN
+*I led_OBUF_7_inst:O O
+*I led_7 I
+*CAP
+1 led_OBUF_7_inst:O 0.0
+2 led_7 0.00100
+*RES
+1 led_OBUF_7_inst:O led_7 526.3636
+*END
+
+*D_NET led_OBUF_0 0.00300
+*CONN
+*I rxcnt_reg_0:Q O
+*I led_OBUF_0_inst:I I
+*I rxcnt_0_i_2:I0 I
+*I txb_reg_0:D I
+*CAP
+1 rxcnt_reg_0:Q 0.0
+2 led_OBUF_0_inst:I 0.00100
+3 rxcnt_0_i_2:I0 0.00100
+4 txb_reg_0:D 0.00100
+*RES
+1 rxcnt_reg_0:Q led_OBUF_0_inst:I 526.3636
+2 rxcnt_reg_0:Q rxcnt_0_i_2:I0 526.3636
+3 rxcnt_reg_0:Q txb_reg_0:D 526.3636
+*END
+
+*D_NET led_OBUF_1 0.00300
+*CONN
+*I rxcnt_reg_1:Q O
+*I led_OBUF_1_inst:I I
+*I rxcnt_reg_0_i_1:S1 I
+*I txb_reg_1:D I
+*CAP
+1 rxcnt_reg_1:Q 0.0
+2 led_OBUF_1_inst:I 0.00100
+3 rxcnt_reg_0_i_1:S1 0.00100
+4 txb_reg_1:D 0.00100
+*RES
+1 rxcnt_reg_1:Q led_OBUF_1_inst:I 526.3636
+2 rxcnt_reg_1:Q rxcnt_reg_0_i_1:S1 526.3636
+3 rxcnt_reg_1:Q txb_reg_1:D 526.3636
+*END
+
+*D_NET led_OBUF_2 0.00300
+*CONN
+*I rxcnt_reg_2:Q O
+*I led_OBUF_2_inst:I I
+*I rxcnt_reg_0_i_1:S2 I
+*I txb_reg_2:D I
+*CAP
+1 rxcnt_reg_2:Q 0.0
+2 led_OBUF_2_inst:I 0.00100
+3 rxcnt_reg_0_i_1:S2 0.00100
+4 txb_reg_2:D 0.00100
+*RES
+1 rxcnt_reg_2:Q led_OBUF_2_inst:I 526.3636
+2 rxcnt_reg_2:Q rxcnt_reg_0_i_1:S2 526.3636
+3 rxcnt_reg_2:Q txb_reg_2:D 526.3636
+*END
+
+*D_NET led_OBUF_3 0.00300
+*CONN
+*I rxcnt_reg_3:Q O
+*I led_OBUF_3_inst:I I
+*I rxcnt_reg_0_i_1:S3 I
+*I txb_reg_3:D I
+*CAP
+1 rxcnt_reg_3:Q 0.0
+2 led_OBUF_3_inst:I 0.00100
+3 rxcnt_reg_0_i_1:S3 0.00100
+4 txb_reg_3:D 0.00100
+*RES
+1 rxcnt_reg_3:Q led_OBUF_3_inst:I 526.3636
+2 rxcnt_reg_3:Q rxcnt_reg_0_i_1:S3 526.3636
+3 rxcnt_reg_3:Q txb_reg_3:D 526.3636
+*END
+
+*D_NET led_OBUF_4 0.00200
+*CONN
+*I rxcnt_reg_4:Q O
+*I led_OBUF_4_inst:I I
+*I rxcnt_reg_4_i_1:S0 I
+*CAP
+1 rxcnt_reg_4:Q 0.0
+2 led_OBUF_4_inst:I 0.00100
+3 rxcnt_reg_4_i_1:S0 0.00100
+*RES
+1 rxcnt_reg_4:Q led_OBUF_4_inst:I 526.3636
+2 rxcnt_reg_4:Q rxcnt_reg_4_i_1:S0 526.3636
+*END
+
+*D_NET led_OBUF_5 0.00200
+*CONN
+*I hbeat_reg_24:Q O
+*I hbeat_reg_24_i_1:S0 I
+*I led_OBUF_5_inst:I I
+*CAP
+1 hbeat_reg_24:Q 0.0
+2 hbeat_reg_24_i_1:S0 0.00100
+3 led_OBUF_5_inst:I 0.00100
+*RES
+1 hbeat_reg_24:Q hbeat_reg_24_i_1:S0 526.3636
+2 hbeat_reg_24:Q led_OBUF_5_inst:I 526.3636
+*END
+
+*D_NET led_OBUF_6 0.00100
+*CONN
+*I led_OBUF_6 O
+*I led_OBUF_6_inst:I I
+*CAP
+1 led_OBUF_6 0.0
+2 led_OBUF_6_inst:I 0.00100
+*RES
+1 led_OBUF_6 led_OBUF_6_inst:I 526.3636
+*END
+
+*D_NET led_OBUF_7 0.00200
+*CONN
+*I led_OBUF_7 O
+*I led_OBUF_7_inst:I I
+*I rcnt_5_i_1:I1 I
+*CAP
+1 led_OBUF_7 0.0
+2 led_OBUF_7_inst:I 0.00100
+3 rcnt_5_i_1:I1 0.00100
+*RES
+1 led_OBUF_7 led_OBUF_7_inst:I 526.3636
+2 led_OBUF_7 rcnt_5_i_1:I1 526.3636
+*END
+
+*D_NET mmcm_clkout0 0.00100
+*CONN
+*I mmcm_clkout0 O
+*I cpu_bufg:I I
+*CAP
+1 mmcm_clkout0 0.0
+2 cpu_bufg:I 0.00100
+*RES
+1 mmcm_clkout0 cpu_bufg:I 526.3636
+*END
+
+*D_NET p_0_in_0 0.00100
+*CONN
+*I rcnt_0_i_1:O O
+*I rcnt_reg_0:D I
+*CAP
+1 rcnt_0_i_1:O 0.0
+2 rcnt_reg_0:D 0.00100
+*RES
+1 rcnt_0_i_1:O rcnt_reg_0:D 526.3636
+*END
+
+*D_NET p_0_in_1 0.00100
+*CONN
+*I rcnt_1_i_1:O O
+*I rcnt_reg_1:D I
+*CAP
+1 rcnt_1_i_1:O 0.0
+2 rcnt_reg_1:D 0.00100
+*RES
+1 rcnt_1_i_1:O rcnt_reg_1:D 526.3636
+*END
+
+*D_NET p_0_in_2 0.00100
+*CONN
+*I rcnt_2_i_1:O O
+*I rcnt_reg_2:D I
+*CAP
+1 rcnt_2_i_1:O 0.0
+2 rcnt_reg_2:D 0.00100
+*RES
+1 rcnt_2_i_1:O rcnt_reg_2:D 526.3636
+*END
+
+*D_NET p_0_in_3 0.00100
+*CONN
+*I rcnt_3_i_1:O O
+*I rcnt_reg_3:D I
+*CAP
+1 rcnt_3_i_1:O 0.0
+2 rcnt_reg_3:D 0.00100
+*RES
+1 rcnt_3_i_1:O rcnt_reg_3:D 526.3636
+*END
+
+*D_NET p_0_in_4 0.00100
+*CONN
+*I rcnt_4_i_1:O O
+*I rcnt_reg_4:D I
+*CAP
+1 rcnt_4_i_1:O 0.0
+2 rcnt_reg_4:D 0.00100
+*RES
+1 rcnt_4_i_1:O rcnt_reg_4:D 526.3636
+*END
+
+*D_NET p_0_in_5 0.00100
+*CONN
+*I rcnt_5_i_2:O O
+*I rcnt_reg_5:D I
+*CAP
+1 rcnt_5_i_2:O 0.0
+2 rcnt_reg_5:D 0.00100
+*RES
+1 rcnt_5_i_2:O rcnt_reg_5:D 526.3636
+*END
+
+*D_NET rcnt_5_i_1_n_0 0.00600
+*CONN
+*I rcnt_5_i_1:O O
+*I rcnt_reg_0:R I
+*I rcnt_reg_1:R I
+*I rcnt_reg_2:R I
+*I rcnt_reg_3:R I
+*I rcnt_reg_4:R I
+*I rcnt_reg_5:R I
+*CAP
+1 rcnt_5_i_1:O 0.0
+2 rcnt_reg_0:R 0.00100
+3 rcnt_reg_1:R 0.00100
+4 rcnt_reg_2:R 0.00100
+5 rcnt_reg_3:R 0.00100
+6 rcnt_reg_4:R 0.00100
+7 rcnt_reg_5:R 0.00100
+*RES
+1 rcnt_5_i_1:O rcnt_reg_0:R 526.3636
+2 rcnt_5_i_1:O rcnt_reg_1:R 526.3636
+3 rcnt_5_i_1:O rcnt_reg_2:R 526.3636
+4 rcnt_5_i_1:O rcnt_reg_3:R 526.3636
+5 rcnt_5_i_1:O rcnt_reg_4:R 526.3636
+6 rcnt_5_i_1:O rcnt_reg_5:R 526.3636
+*END
+
+*D_NET rcnt_reg_0 0.00600
+*CONN
+*I rcnt_reg_0:Q O
+*I rcnt_0_i_1:I3 I
+*I rcnt_1_i_1:I0 I
+*I rcnt_2_i_1:I4 I
+*I rcnt_3_i_1:I1 I
+*I rcnt_4_i_1:I3 I
+*I rcnt_5_i_2:I2 I
+*CAP
+1 rcnt_reg_0:Q 0.0
+2 rcnt_0_i_1:I3 0.00100
+3 rcnt_1_i_1:I0 0.00100
+4 rcnt_2_i_1:I4 0.00100
+5 rcnt_3_i_1:I1 0.00100
+6 rcnt_4_i_1:I3 0.00100
+7 rcnt_5_i_2:I2 0.00100
+*RES
+1 rcnt_reg_0:Q rcnt_0_i_1:I3 526.3636
+2 rcnt_reg_0:Q rcnt_1_i_1:I0 526.3636
+3 rcnt_reg_0:Q rcnt_2_i_1:I4 526.3636
+4 rcnt_reg_0:Q rcnt_3_i_1:I1 526.3636
+5 rcnt_reg_0:Q rcnt_4_i_1:I3 526.3636
+6 rcnt_reg_0:Q rcnt_5_i_2:I2 526.3636
+*END
+
+*D_NET rcnt_reg_1 0.00600
+*CONN
+*I rcnt_reg_1:Q O
+*I rcnt_0_i_1:I2 I
+*I rcnt_1_i_1:I5 I
+*I rcnt_2_i_1:I2 I
+*I rcnt_3_i_1:I2 I
+*I rcnt_4_i_1:I2 I
+*I rcnt_5_i_2:I3 I
+*CAP
+1 rcnt_reg_1:Q 0.0
+2 rcnt_0_i_1:I2 0.00100
+3 rcnt_1_i_1:I5 0.00100
+4 rcnt_2_i_1:I2 0.00100
+5 rcnt_3_i_1:I2 0.00100
+6 rcnt_4_i_1:I2 0.00100
+7 rcnt_5_i_2:I3 0.00100
+*RES
+1 rcnt_reg_1:Q rcnt_0_i_1:I2 526.3636
+2 rcnt_reg_1:Q rcnt_1_i_1:I5 526.3636
+3 rcnt_reg_1:Q rcnt_2_i_1:I2 526.3636
+4 rcnt_reg_1:Q rcnt_3_i_1:I2 526.3636
+5 rcnt_reg_1:Q rcnt_4_i_1:I2 526.3636
+6 rcnt_reg_1:Q rcnt_5_i_2:I3 526.3636
+*END
+
+*D_NET rcnt_reg_2 0.00600
+*CONN
+*I rcnt_reg_2:Q O
+*I rcnt_0_i_1:I5 I
+*I rcnt_1_i_1:I1 I
+*I rcnt_2_i_1:I5 I
+*I rcnt_3_i_1:I0 I
+*I rcnt_4_i_1:I4 I
+*I rcnt_5_i_2:I1 I
+*CAP
+1 rcnt_reg_2:Q 0.0
+2 rcnt_0_i_1:I5 0.00100
+3 rcnt_1_i_1:I1 0.00100
+4 rcnt_2_i_1:I5 0.00100
+5 rcnt_3_i_1:I0 0.00100
+6 rcnt_4_i_1:I4 0.00100
+7 rcnt_5_i_2:I1 0.00100
+*RES
+1 rcnt_reg_2:Q rcnt_0_i_1:I5 526.3636
+2 rcnt_reg_2:Q rcnt_1_i_1:I1 526.3636
+3 rcnt_reg_2:Q rcnt_2_i_1:I5 526.3636
+4 rcnt_reg_2:Q rcnt_3_i_1:I0 526.3636
+5 rcnt_reg_2:Q rcnt_4_i_1:I4 526.3636
+6 rcnt_reg_2:Q rcnt_5_i_2:I1 526.3636
+*END
+
+*D_NET rcnt_reg_3 0.00600
+*CONN
+*I rcnt_reg_3:Q O
+*I rcnt_0_i_1:I4 I
+*I rcnt_1_i_1:I2 I
+*I rcnt_2_i_1:I3 I
+*I rcnt_3_i_1:I5 I
+*I rcnt_4_i_1:I0 I
+*I rcnt_5_i_2:I4 I
+*CAP
+1 rcnt_reg_3:Q 0.0
+2 rcnt_0_i_1:I4 0.00100
+3 rcnt_1_i_1:I2 0.00100
+4 rcnt_2_i_1:I3 0.00100
+5 rcnt_3_i_1:I5 0.00100
+6 rcnt_4_i_1:I0 0.00100
+7 rcnt_5_i_2:I4 0.00100
+*RES
+1 rcnt_reg_3:Q rcnt_0_i_1:I4 526.3636
+2 rcnt_reg_3:Q rcnt_1_i_1:I2 526.3636
+3 rcnt_reg_3:Q rcnt_2_i_1:I3 526.3636
+4 rcnt_reg_3:Q rcnt_3_i_1:I5 526.3636
+5 rcnt_reg_3:Q rcnt_4_i_1:I0 526.3636
+6 rcnt_reg_3:Q rcnt_5_i_2:I4 526.3636
+*END
+
+*D_NET rcnt_reg_4 0.00600
+*CONN
+*I rcnt_reg_4:Q O
+*I rcnt_0_i_1:I0 I
+*I rcnt_1_i_1:I4 I
+*I rcnt_2_i_1:I0 I
+*I rcnt_3_i_1:I4 I
+*I rcnt_4_i_1:I5 I
+*I rcnt_5_i_2:I0 I
+*CAP
+1 rcnt_reg_4:Q 0.0
+2 rcnt_0_i_1:I0 0.00100
+3 rcnt_1_i_1:I4 0.00100
+4 rcnt_2_i_1:I0 0.00100
+5 rcnt_3_i_1:I4 0.00100
+6 rcnt_4_i_1:I5 0.00100
+7 rcnt_5_i_2:I0 0.00100
+*RES
+1 rcnt_reg_4:Q rcnt_0_i_1:I0 526.3636
+2 rcnt_reg_4:Q rcnt_1_i_1:I4 526.3636
+3 rcnt_reg_4:Q rcnt_2_i_1:I0 526.3636
+4 rcnt_reg_4:Q rcnt_3_i_1:I4 526.3636
+5 rcnt_reg_4:Q rcnt_4_i_1:I5 526.3636
+6 rcnt_reg_4:Q rcnt_5_i_2:I0 526.3636
+*END
+
+*D_NET rcnt_reg_5 0.00600
+*CONN
+*I rcnt_reg_5:Q O
+*I rcnt_0_i_1:I1 I
+*I rcnt_1_i_1:I3 I
+*I rcnt_2_i_1:I1 I
+*I rcnt_3_i_1:I3 I
+*I rcnt_4_i_1:I1 I
+*I rcnt_5_i_2:I5 I
+*CAP
+1 rcnt_reg_5:Q 0.0
+2 rcnt_0_i_1:I1 0.00100
+3 rcnt_1_i_1:I3 0.00100
+4 rcnt_2_i_1:I1 0.00100
+5 rcnt_3_i_1:I3 0.00100
+6 rcnt_4_i_1:I1 0.00100
+7 rcnt_5_i_2:I5 0.00100
+*RES
+1 rcnt_reg_5:Q rcnt_0_i_1:I1 526.3636
+2 rcnt_reg_5:Q rcnt_1_i_1:I3 526.3636
+3 rcnt_reg_5:Q rcnt_2_i_1:I1 526.3636
+4 rcnt_reg_5:Q rcnt_3_i_1:I3 526.3636
+5 rcnt_reg_5:Q rcnt_4_i_1:I1 526.3636
+6 rcnt_reg_5:Q rcnt_5_i_2:I5 526.3636
+*END
+
+*D_NET rst 0.00100
+*CONN
+*I rst O
+*I rst_IBUF_inst:I I
+*CAP
+1 rst 0.0
+2 rst_IBUF_inst:I 0.00100
+*RES
+1 rst rst_IBUF_inst:I 526.3636
+*END
+
+*D_NET rst_IBUF 0.00100
+*CONN
+*I rst_IBUF_inst:O O
+*I rcnt_5_i_1:I0 I
+*CAP
+1 rst_IBUF_inst:O 0.0
+2 rcnt_5_i_1:I0 0.00100
+*RES
+1 rst_IBUF_inst:O rcnt_5_i_1:I0 526.3636
+*END
+
+*D_NET rst_sync 0.02800
+*CONN
+*I rst_sync O
+*I rxcnt_reg_0:R I
+*I rxcnt_reg_1:R I
+*I rxcnt_reg_2:R I
+*I rxcnt_reg_3:R I
+*I rxcnt_reg_4:R I
+*I tick_reg_0:R I
+*I tick_reg_10:R I
+*I tick_reg_11:R I
+*I tick_reg_12:R I
+*I tick_reg_13:R I
+*I tick_reg_14:R I
+*I tick_reg_15:R I
+*I tick_reg_16:R I
+*I tick_reg_17:R I
+*I tick_reg_18:R I
+*I tick_reg_19:R I
+*I tick_reg_1:R I
+*I tick_reg_20:R I
+*I tick_reg_21:R I
+*I tick_reg_2:R I
+*I tick_reg_3:R I
+*I tick_reg_4:R I
+*I tick_reg_5:R I
+*I tick_reg_6:R I
+*I tick_reg_7:R I
+*I tick_reg_8:R I
+*I tick_reg_9:R I
+*I utx_stb_reg:R I
+*CAP
+1 rst_sync 0.0
+2 rxcnt_reg_0:R 0.00100
+3 rxcnt_reg_1:R 0.00100
+4 rxcnt_reg_2:R 0.00100
+5 rxcnt_reg_3:R 0.00100
+6 rxcnt_reg_4:R 0.00100
+7 tick_reg_0:R 0.00100
+8 tick_reg_10:R 0.00100
+9 tick_reg_11:R 0.00100
+10 tick_reg_12:R 0.00100
+11 tick_reg_13:R 0.00100
+12 tick_reg_14:R 0.00100
+13 tick_reg_15:R 0.00100
+14 tick_reg_16:R 0.00100
+15 tick_reg_17:R 0.00100
+16 tick_reg_18:R 0.00100
+17 tick_reg_19:R 0.00100
+18 tick_reg_1:R 0.00100
+19 tick_reg_20:R 0.00100
+20 tick_reg_21:R 0.00100
+21 tick_reg_2:R 0.00100
+22 tick_reg_3:R 0.00100
+23 tick_reg_4:R 0.00100
+24 tick_reg_5:R 0.00100
+25 tick_reg_6:R 0.00100
+26 tick_reg_7:R 0.00100
+27 tick_reg_8:R 0.00100
+28 tick_reg_9:R 0.00100
+29 utx_stb_reg:R 0.00100
+*RES
+1 rst_sync rxcnt_reg_0:R 526.3636
+2 rst_sync rxcnt_reg_1:R 526.3636
+3 rst_sync rxcnt_reg_2:R 526.3636
+4 rst_sync rxcnt_reg_3:R 526.3636
+5 rst_sync rxcnt_reg_4:R 526.3636
+6 rst_sync tick_reg_0:R 526.3636
+7 rst_sync tick_reg_10:R 526.3636
+8 rst_sync tick_reg_11:R 526.3636
+9 rst_sync tick_reg_12:R 526.3636
+10 rst_sync tick_reg_13:R 526.3636
+11 rst_sync tick_reg_14:R 526.3636
+12 rst_sync tick_reg_15:R 526.3636
+13 rst_sync tick_reg_16:R 526.3636
+14 rst_sync tick_reg_17:R 526.3636
+15 rst_sync tick_reg_18:R 526.3636
+16 rst_sync tick_reg_19:R 526.3636
+17 rst_sync tick_reg_1:R 526.3636
+18 rst_sync tick_reg_20:R 526.3636
+19 rst_sync tick_reg_21:R 526.3636
+20 rst_sync tick_reg_2:R 526.3636
+21 rst_sync tick_reg_3:R 526.3636
+22 rst_sync tick_reg_4:R 526.3636
+23 rst_sync tick_reg_5:R 526.3636
+24 rst_sync tick_reg_6:R 526.3636
+25 rst_sync tick_reg_7:R 526.3636
+26 rst_sync tick_reg_8:R 526.3636
+27 rst_sync tick_reg_9:R 526.3636
+28 rst_sync utx_stb_reg:R 526.3636
+*END
+
+*D_NET rxcnt_0_i_2_n_0 0.00100
+*CONN
+*I rxcnt_0_i_2:O O
+*I rxcnt_reg_0_i_1:S0 I
+*CAP
+1 rxcnt_0_i_2:O 0.0
+2 rxcnt_reg_0_i_1:S0 0.00100
+*RES
+1 rxcnt_0_i_2:O rxcnt_reg_0_i_1:S0 526.3636
+*END
+
+*D_NET rxcnt_reg_0_i_1_n_0 0.00100
+*CONN
+*I rxcnt_reg_0_i_1:CO1 O
+*I rxcnt_reg_4_i_1:CI I
+*CAP
+1 rxcnt_reg_0_i_1:CO1 0.0
+2 rxcnt_reg_4_i_1:CI 0.00100
+*RES
+1 rxcnt_reg_0_i_1:CO1 rxcnt_reg_4_i_1:CI 526.3636
+*END
+
+*D_NET rxcnt_reg_0_i_1_n_4 0.00100
+*CONN
+*I rxcnt_reg_0_i_1:O3 O
+*I rxcnt_reg_3:D I
+*CAP
+1 rxcnt_reg_0_i_1:O3 0.0
+2 rxcnt_reg_3:D 0.00100
+*RES
+1 rxcnt_reg_0_i_1:O3 rxcnt_reg_3:D 526.3636
+*END
+
+*D_NET rxcnt_reg_0_i_1_n_5 0.00100
+*CONN
+*I rxcnt_reg_0_i_1:O2 O
+*I rxcnt_reg_2:D I
+*CAP
+1 rxcnt_reg_0_i_1:O2 0.0
+2 rxcnt_reg_2:D 0.00100
+*RES
+1 rxcnt_reg_0_i_1:O2 rxcnt_reg_2:D 526.3636
+*END
+
+*D_NET rxcnt_reg_0_i_1_n_6 0.00100
+*CONN
+*I rxcnt_reg_0_i_1:O1 O
+*I rxcnt_reg_1:D I
+*CAP
+1 rxcnt_reg_0_i_1:O1 0.0
+2 rxcnt_reg_1:D 0.00100
+*RES
+1 rxcnt_reg_0_i_1:O1 rxcnt_reg_1:D 526.3636
+*END
+
+*D_NET rxcnt_reg_0_i_1_n_7 0.00100
+*CONN
+*I rxcnt_reg_0_i_1:O0 O
+*I rxcnt_reg_0:D I
+*CAP
+1 rxcnt_reg_0_i_1:O0 0.0
+2 rxcnt_reg_0:D 0.00100
+*RES
+1 rxcnt_reg_0_i_1:O0 rxcnt_reg_0:D 526.3636
+*END
+
+*D_NET rxcnt_reg_4_i_1_n_7 0.00100
+*CONN
+*I rxcnt_reg_4_i_1:O0 O
+*I rxcnt_reg_4:D I
+*CAP
+1 rxcnt_reg_4_i_1:O0 0.0
+2 rxcnt_reg_4:D 0.00100
+*RES
+1 rxcnt_reg_4_i_1:O0 rxcnt_reg_4:D 526.3636
+*END
+
+*D_NET stb 0.00500
+*CONN
+*I stb O
+*I rxcnt_reg_0:CE I
+*I rxcnt_reg_1:CE I
+*I rxcnt_reg_2:CE I
+*I rxcnt_reg_3:CE I
+*I rxcnt_reg_4:CE I
+*CAP
+1 stb 0.0
+2 rxcnt_reg_0:CE 0.00100
+3 rxcnt_reg_1:CE 0.00100
+4 rxcnt_reg_2:CE 0.00100
+5 rxcnt_reg_3:CE 0.00100
+6 rxcnt_reg_4:CE 0.00100
+*RES
+1 stb rxcnt_reg_0:CE 526.3636
+2 stb rxcnt_reg_1:CE 526.3636
+3 stb rxcnt_reg_2:CE 526.3636
+4 stb rxcnt_reg_3:CE 526.3636
+5 stb rxcnt_reg_4:CE 526.3636
+*END
+
+*D_NET sysclk_ibuf 0.00100
+*CONN
+*I sysclk_ibuf O
+*I sysclk_bufg:I I
+*CAP
+1 sysclk_ibuf 0.0
+2 sysclk_bufg:I 0.00100
+*RES
+1 sysclk_ibuf sysclk_bufg:I 526.3636
+*END
+
+*D_NET tick_0_i_2_n_0 0.00100
+*CONN
+*I tick_0_i_2:O O
+*I tick_reg_0_i_1:S0 I
+*CAP
+1 tick_0_i_2:O 0.0
+2 tick_reg_0_i_1:S0 0.00100
+*RES
+1 tick_0_i_2:O tick_reg_0_i_1:S0 526.3636
+*END
+
+*D_NET tick_reg_0 0.00200
+*CONN
+*I tick_reg_0:Q O
+*I tick_0_i_2:I0 I
+*I utx_stb_i_4:I1 I
+*CAP
+1 tick_reg_0:Q 0.0
+2 tick_0_i_2:I0 0.00100
+3 utx_stb_i_4:I1 0.00100
+*RES
+1 tick_reg_0:Q tick_0_i_2:I0 526.3636
+2 tick_reg_0:Q utx_stb_i_4:I1 526.3636
+*END
+
+*D_NET tick_reg_0_i_1_n_0 0.00100
+*CONN
+*I tick_reg_0_i_1:CO1 O
+*I tick_reg_4_i_1:CI I
+*CAP
+1 tick_reg_0_i_1:CO1 0.0
+2 tick_reg_4_i_1:CI 0.00100
+*RES
+1 tick_reg_0_i_1:CO1 tick_reg_4_i_1:CI 526.3636
+*END
+
+*D_NET tick_reg_0_i_1_n_4 0.00100
+*CONN
+*I tick_reg_0_i_1:O3 O
+*I tick_reg_3:D I
+*CAP
+1 tick_reg_0_i_1:O3 0.0
+2 tick_reg_3:D 0.00100
+*RES
+1 tick_reg_0_i_1:O3 tick_reg_3:D 526.3636
+*END
+
+*D_NET tick_reg_0_i_1_n_5 0.00100
+*CONN
+*I tick_reg_0_i_1:O2 O
+*I tick_reg_2:D I
+*CAP
+1 tick_reg_0_i_1:O2 0.0
+2 tick_reg_2:D 0.00100
+*RES
+1 tick_reg_0_i_1:O2 tick_reg_2:D 526.3636
+*END
+
+*D_NET tick_reg_0_i_1_n_6 0.00100
+*CONN
+*I tick_reg_0_i_1:O1 O
+*I tick_reg_1:D I
+*CAP
+1 tick_reg_0_i_1:O1 0.0
+2 tick_reg_1:D 0.00100
+*RES
+1 tick_reg_0_i_1:O1 tick_reg_1:D 526.3636
+*END
+
+*D_NET tick_reg_0_i_1_n_7 0.00100
+*CONN
+*I tick_reg_0_i_1:O0 O
+*I tick_reg_0:D I
+*CAP
+1 tick_reg_0_i_1:O0 0.0
+2 tick_reg_0:D 0.00100
+*RES
+1 tick_reg_0_i_1:O0 tick_reg_0:D 526.3636
+*END
+
+*D_NET tick_reg_1 0.00200
+*CONN
+*I tick_reg_1:Q O
+*I tick_reg_0_i_1:S1 I
+*I utx_stb_i_4:I0 I
+*CAP
+1 tick_reg_1:Q 0.0
+2 tick_reg_0_i_1:S1 0.00100
+3 utx_stb_i_4:I0 0.00100
+*RES
+1 tick_reg_1:Q tick_reg_0_i_1:S1 526.3636
+2 tick_reg_1:Q utx_stb_i_4:I0 526.3636
+*END
+
+*D_NET tick_reg_10 0.00200
+*CONN
+*I tick_reg_10:Q O
+*I tick_reg_8_i_1:S2 I
+*I utx_stb_i_6:I1 I
+*CAP
+1 tick_reg_10:Q 0.0
+2 tick_reg_8_i_1:S2 0.00100
+3 utx_stb_i_6:I1 0.00100
+*RES
+1 tick_reg_10:Q tick_reg_8_i_1:S2 526.3636
+2 tick_reg_10:Q utx_stb_i_6:I1 526.3636
+*END
+
+*D_NET tick_reg_11 0.00200
+*CONN
+*I tick_reg_11:Q O
+*I tick_reg_8_i_1:S3 I
+*I utx_stb_i_6:I0 I
+*CAP
+1 tick_reg_11:Q 0.0
+2 tick_reg_8_i_1:S3 0.00100
+3 utx_stb_i_6:I0 0.00100
+*RES
+1 tick_reg_11:Q tick_reg_8_i_1:S3 526.3636
+2 tick_reg_11:Q utx_stb_i_6:I0 526.3636
+*END
+
+*D_NET tick_reg_12 0.00100
+*CONN
+*I tick_reg_12:Q O
+*I tick_reg_12_i_1:S0 I
+*CAP
+1 tick_reg_12:Q 0.0
+2 tick_reg_12_i_1:S0 0.00100
+*RES
+1 tick_reg_12:Q tick_reg_12_i_1:S0 526.3636
+*END
+
+*D_NET tick_reg_12_i_1_n_0 0.00100
+*CONN
+*I tick_reg_12_i_1:CO1 O
+*I tick_reg_16_i_1:CI I
+*CAP
+1 tick_reg_12_i_1:CO1 0.0
+2 tick_reg_16_i_1:CI 0.00100
+*RES
+1 tick_reg_12_i_1:CO1 tick_reg_16_i_1:CI 526.3636
+*END
+
+*D_NET tick_reg_12_i_1_n_4 0.00100
+*CONN
+*I tick_reg_12_i_1:O3 O
+*I tick_reg_15:D I
+*CAP
+1 tick_reg_12_i_1:O3 0.0
+2 tick_reg_15:D 0.00100
+*RES
+1 tick_reg_12_i_1:O3 tick_reg_15:D 526.3636
+*END
+
+*D_NET tick_reg_12_i_1_n_5 0.00100
+*CONN
+*I tick_reg_12_i_1:O2 O
+*I tick_reg_14:D I
+*CAP
+1 tick_reg_12_i_1:O2 0.0
+2 tick_reg_14:D 0.00100
+*RES
+1 tick_reg_12_i_1:O2 tick_reg_14:D 526.3636
+*END
+
+*D_NET tick_reg_12_i_1_n_6 0.00100
+*CONN
+*I tick_reg_12_i_1:O1 O
+*I tick_reg_13:D I
+*CAP
+1 tick_reg_12_i_1:O1 0.0
+2 tick_reg_13:D 0.00100
+*RES
+1 tick_reg_12_i_1:O1 tick_reg_13:D 526.3636
+*END
+
+*D_NET tick_reg_12_i_1_n_7 0.00100
+*CONN
+*I tick_reg_12_i_1:O0 O
+*I tick_reg_12:D I
+*CAP
+1 tick_reg_12_i_1:O0 0.0
+2 tick_reg_12:D 0.00100
+*RES
+1 tick_reg_12_i_1:O0 tick_reg_12:D 526.3636
+*END
+
+*D_NET tick_reg_13 0.00100
+*CONN
+*I tick_reg_13:Q O
+*I tick_reg_12_i_1:S1 I
+*CAP
+1 tick_reg_13:Q 0.0
+2 tick_reg_12_i_1:S1 0.00100
+*RES
+1 tick_reg_13:Q tick_reg_12_i_1:S1 526.3636
+*END
+
+*D_NET tick_reg_14 0.00100
+*CONN
+*I tick_reg_14:Q O
+*I tick_reg_12_i_1:S2 I
+*CAP
+1 tick_reg_14:Q 0.0
+2 tick_reg_12_i_1:S2 0.00100
+*RES
+1 tick_reg_14:Q tick_reg_12_i_1:S2 526.3636
+*END
+
+*D_NET tick_reg_15 0.00100
+*CONN
+*I tick_reg_15:Q O
+*I tick_reg_12_i_1:S3 I
+*CAP
+1 tick_reg_15:Q 0.0
+2 tick_reg_12_i_1:S3 0.00100
+*RES
+1 tick_reg_15:Q tick_reg_12_i_1:S3 526.3636
+*END
+
+*D_NET tick_reg_16 0.00200
+*CONN
+*I tick_reg_16:Q O
+*I tick_reg_16_i_1:S0 I
+*I utx_stb_i_2:I4 I
+*CAP
+1 tick_reg_16:Q 0.0
+2 tick_reg_16_i_1:S0 0.00100
+3 utx_stb_i_2:I4 0.00100
+*RES
+1 tick_reg_16:Q tick_reg_16_i_1:S0 526.3636
+2 tick_reg_16:Q utx_stb_i_2:I4 526.3636
+*END
+
+*D_NET tick_reg_16_i_1_n_0 0.00100
+*CONN
+*I tick_reg_16_i_1:CO1 O
+*I tick_reg_20_i_1:CI I
+*CAP
+1 tick_reg_16_i_1:CO1 0.0
+2 tick_reg_20_i_1:CI 0.00100
+*RES
+1 tick_reg_16_i_1:CO1 tick_reg_20_i_1:CI 526.3636
+*END
+
+*D_NET tick_reg_16_i_1_n_4 0.00100
+*CONN
+*I tick_reg_16_i_1:O3 O
+*I tick_reg_19:D I
+*CAP
+1 tick_reg_16_i_1:O3 0.0
+2 tick_reg_19:D 0.00100
+*RES
+1 tick_reg_16_i_1:O3 tick_reg_19:D 526.3636
+*END
+
+*D_NET tick_reg_16_i_1_n_5 0.00100
+*CONN
+*I tick_reg_16_i_1:O2 O
+*I tick_reg_18:D I
+*CAP
+1 tick_reg_16_i_1:O2 0.0
+2 tick_reg_18:D 0.00100
+*RES
+1 tick_reg_16_i_1:O2 tick_reg_18:D 526.3636
+*END
+
+*D_NET tick_reg_16_i_1_n_6 0.00100
+*CONN
+*I tick_reg_16_i_1:O1 O
+*I tick_reg_17:D I
+*CAP
+1 tick_reg_16_i_1:O1 0.0
+2 tick_reg_17:D 0.00100
+*RES
+1 tick_reg_16_i_1:O1 tick_reg_17:D 526.3636
+*END
+
+*D_NET tick_reg_16_i_1_n_7 0.00100
+*CONN
+*I tick_reg_16_i_1:O0 O
+*I tick_reg_16:D I
+*CAP
+1 tick_reg_16_i_1:O0 0.0
+2 tick_reg_16:D 0.00100
+*RES
+1 tick_reg_16_i_1:O0 tick_reg_16:D 526.3636
+*END
+
+*D_NET tick_reg_17 0.00200
+*CONN
+*I tick_reg_17:Q O
+*I tick_reg_16_i_1:S1 I
+*I utx_stb_i_2:I5 I
+*CAP
+1 tick_reg_17:Q 0.0
+2 tick_reg_16_i_1:S1 0.00100
+3 utx_stb_i_2:I5 0.00100
+*RES
+1 tick_reg_17:Q tick_reg_16_i_1:S1 526.3636
+2 tick_reg_17:Q utx_stb_i_2:I5 526.3636
+*END
+
+*D_NET tick_reg_18 0.00200
+*CONN
+*I tick_reg_18:Q O
+*I tick_reg_16_i_1:S2 I
+*I utx_stb_i_2:I3 I
+*CAP
+1 tick_reg_18:Q 0.0
+2 tick_reg_16_i_1:S2 0.00100
+3 utx_stb_i_2:I3 0.00100
+*RES
+1 tick_reg_18:Q tick_reg_16_i_1:S2 526.3636
+2 tick_reg_18:Q utx_stb_i_2:I3 526.3636
+*END
+
+*D_NET tick_reg_19 0.00200
+*CONN
+*I tick_reg_19:Q O
+*I tick_reg_16_i_1:S3 I
+*I utx_stb_i_2:I2 I
+*CAP
+1 tick_reg_19:Q 0.0
+2 tick_reg_16_i_1:S3 0.00100
+3 utx_stb_i_2:I2 0.00100
+*RES
+1 tick_reg_19:Q tick_reg_16_i_1:S3 526.3636
+2 tick_reg_19:Q utx_stb_i_2:I2 526.3636
+*END
+
+*D_NET tick_reg_2 0.00200
+*CONN
+*I tick_reg_2:Q O
+*I tick_reg_0_i_1:S2 I
+*I utx_stb_i_4:I3 I
+*CAP
+1 tick_reg_2:Q 0.0
+2 tick_reg_0_i_1:S2 0.00100
+3 utx_stb_i_4:I3 0.00100
+*RES
+1 tick_reg_2:Q tick_reg_0_i_1:S2 526.3636
+2 tick_reg_2:Q utx_stb_i_4:I3 526.3636
+*END
+
+*D_NET tick_reg_20 0.00200
+*CONN
+*I tick_reg_20:Q O
+*I tick_reg_20_i_1:S0 I
+*I utx_stb_i_2:I0 I
+*CAP
+1 tick_reg_20:Q 0.0
+2 tick_reg_20_i_1:S0 0.00100
+3 utx_stb_i_2:I0 0.00100
+*RES
+1 tick_reg_20:Q tick_reg_20_i_1:S0 526.3636
+2 tick_reg_20:Q utx_stb_i_2:I0 526.3636
+*END
+
+*D_NET tick_reg_20_i_1_n_6 0.00100
+*CONN
+*I tick_reg_20_i_1:O1 O
+*I tick_reg_21:D I
+*CAP
+1 tick_reg_20_i_1:O1 0.0
+2 tick_reg_21:D 0.00100
+*RES
+1 tick_reg_20_i_1:O1 tick_reg_21:D 526.3636
+*END
+
+*D_NET tick_reg_20_i_1_n_7 0.00100
+*CONN
+*I tick_reg_20_i_1:O0 O
+*I tick_reg_20:D I
+*CAP
+1 tick_reg_20_i_1:O0 0.0
+2 tick_reg_20:D 0.00100
+*RES
+1 tick_reg_20_i_1:O0 tick_reg_20:D 526.3636
+*END
+
+*D_NET tick_reg_21 0.00200
+*CONN
+*I tick_reg_21:Q O
+*I tick_reg_20_i_1:S1 I
+*I utx_stb_i_2:I1 I
+*CAP
+1 tick_reg_21:Q 0.0
+2 tick_reg_20_i_1:S1 0.00100
+3 utx_stb_i_2:I1 0.00100
+*RES
+1 tick_reg_21:Q tick_reg_20_i_1:S1 526.3636
+2 tick_reg_21:Q utx_stb_i_2:I1 526.3636
+*END
+
+*D_NET tick_reg_3 0.00200
+*CONN
+*I tick_reg_3:Q O
+*I tick_reg_0_i_1:S3 I
+*I utx_stb_i_4:I2 I
+*CAP
+1 tick_reg_3:Q 0.0
+2 tick_reg_0_i_1:S3 0.00100
+3 utx_stb_i_4:I2 0.00100
+*RES
+1 tick_reg_3:Q tick_reg_0_i_1:S3 526.3636
+2 tick_reg_3:Q utx_stb_i_4:I2 526.3636
+*END
+
+*D_NET tick_reg_4 0.00200
+*CONN
+*I tick_reg_4:Q O
+*I tick_reg_4_i_1:S0 I
+*I utx_stb_i_5:I3 I
+*CAP
+1 tick_reg_4:Q 0.0
+2 tick_reg_4_i_1:S0 0.00100
+3 utx_stb_i_5:I3 0.00100
+*RES
+1 tick_reg_4:Q tick_reg_4_i_1:S0 526.3636
+2 tick_reg_4:Q utx_stb_i_5:I3 526.3636
+*END
+
+*D_NET tick_reg_4_i_1_n_0 0.00100
+*CONN
+*I tick_reg_4_i_1:CO1 O
+*I tick_reg_8_i_1:CI I
+*CAP
+1 tick_reg_4_i_1:CO1 0.0
+2 tick_reg_8_i_1:CI 0.00100
+*RES
+1 tick_reg_4_i_1:CO1 tick_reg_8_i_1:CI 526.3636
+*END
+
+*D_NET tick_reg_4_i_1_n_4 0.00100
+*CONN
+*I tick_reg_4_i_1:O3 O
+*I tick_reg_7:D I
+*CAP
+1 tick_reg_4_i_1:O3 0.0
+2 tick_reg_7:D 0.00100
+*RES
+1 tick_reg_4_i_1:O3 tick_reg_7:D 526.3636
+*END
+
+*D_NET tick_reg_4_i_1_n_5 0.00100
+*CONN
+*I tick_reg_4_i_1:O2 O
+*I tick_reg_6:D I
+*CAP
+1 tick_reg_4_i_1:O2 0.0
+2 tick_reg_6:D 0.00100
+*RES
+1 tick_reg_4_i_1:O2 tick_reg_6:D 526.3636
+*END
+
+*D_NET tick_reg_4_i_1_n_6 0.00100
+*CONN
+*I tick_reg_4_i_1:O1 O
+*I tick_reg_5:D I
+*CAP
+1 tick_reg_4_i_1:O1 0.0
+2 tick_reg_5:D 0.00100
+*RES
+1 tick_reg_4_i_1:O1 tick_reg_5:D 526.3636
+*END
+
+*D_NET tick_reg_4_i_1_n_7 0.00100
+*CONN
+*I tick_reg_4_i_1:O0 O
+*I tick_reg_4:D I
+*CAP
+1 tick_reg_4_i_1:O0 0.0
+2 tick_reg_4:D 0.00100
+*RES
+1 tick_reg_4_i_1:O0 tick_reg_4:D 526.3636
+*END
+
+*D_NET tick_reg_5 0.00200
+*CONN
+*I tick_reg_5:Q O
+*I tick_reg_4_i_1:S1 I
+*I utx_stb_i_5:I2 I
+*CAP
+1 tick_reg_5:Q 0.0
+2 tick_reg_4_i_1:S1 0.00100
+3 utx_stb_i_5:I2 0.00100
+*RES
+1 tick_reg_5:Q tick_reg_4_i_1:S1 526.3636
+2 tick_reg_5:Q utx_stb_i_5:I2 526.3636
+*END
+
+*D_NET tick_reg_6 0.00200
+*CONN
+*I tick_reg_6:Q O
+*I tick_reg_4_i_1:S2 I
+*I utx_stb_i_5:I1 I
+*CAP
+1 tick_reg_6:Q 0.0
+2 tick_reg_4_i_1:S2 0.00100
+3 utx_stb_i_5:I1 0.00100
+*RES
+1 tick_reg_6:Q tick_reg_4_i_1:S2 526.3636
+2 tick_reg_6:Q utx_stb_i_5:I1 526.3636
+*END
+
+*D_NET tick_reg_7 0.00200
+*CONN
+*I tick_reg_7:Q O
+*I tick_reg_4_i_1:S3 I
+*I utx_stb_i_5:I0 I
+*CAP
+1 tick_reg_7:Q 0.0
+2 tick_reg_4_i_1:S3 0.00100
+3 utx_stb_i_5:I0 0.00100
+*RES
+1 tick_reg_7:Q tick_reg_4_i_1:S3 526.3636
+2 tick_reg_7:Q utx_stb_i_5:I0 526.3636
+*END
+
+*D_NET tick_reg_8 0.00200
+*CONN
+*I tick_reg_8:Q O
+*I tick_reg_8_i_1:S0 I
+*I utx_stb_i_6:I3 I
+*CAP
+1 tick_reg_8:Q 0.0
+2 tick_reg_8_i_1:S0 0.00100
+3 utx_stb_i_6:I3 0.00100
+*RES
+1 tick_reg_8:Q tick_reg_8_i_1:S0 526.3636
+2 tick_reg_8:Q utx_stb_i_6:I3 526.3636
+*END
+
+*D_NET tick_reg_8_i_1_n_0 0.00100
+*CONN
+*I tick_reg_8_i_1:CO1 O
+*I tick_reg_12_i_1:CI I
+*CAP
+1 tick_reg_8_i_1:CO1 0.0
+2 tick_reg_12_i_1:CI 0.00100
+*RES
+1 tick_reg_8_i_1:CO1 tick_reg_12_i_1:CI 526.3636
+*END
+
+*D_NET tick_reg_8_i_1_n_4 0.00100
+*CONN
+*I tick_reg_8_i_1:O3 O
+*I tick_reg_11:D I
+*CAP
+1 tick_reg_8_i_1:O3 0.0
+2 tick_reg_11:D 0.00100
+*RES
+1 tick_reg_8_i_1:O3 tick_reg_11:D 526.3636
+*END
+
+*D_NET tick_reg_8_i_1_n_5 0.00100
+*CONN
+*I tick_reg_8_i_1:O2 O
+*I tick_reg_10:D I
+*CAP
+1 tick_reg_8_i_1:O2 0.0
+2 tick_reg_10:D 0.00100
+*RES
+1 tick_reg_8_i_1:O2 tick_reg_10:D 526.3636
+*END
+
+*D_NET tick_reg_8_i_1_n_6 0.00100
+*CONN
+*I tick_reg_8_i_1:O1 O
+*I tick_reg_9:D I
+*CAP
+1 tick_reg_8_i_1:O1 0.0
+2 tick_reg_9:D 0.00100
+*RES
+1 tick_reg_8_i_1:O1 tick_reg_9:D 526.3636
+*END
+
+*D_NET tick_reg_8_i_1_n_7 0.00100
+*CONN
+*I tick_reg_8_i_1:O0 O
+*I tick_reg_8:D I
+*CAP
+1 tick_reg_8_i_1:O0 0.0
+2 tick_reg_8:D 0.00100
+*RES
+1 tick_reg_8_i_1:O0 tick_reg_8:D 526.3636
+*END
+
+*D_NET tick_reg_9 0.00200
+*CONN
+*I tick_reg_9:Q O
+*I tick_reg_8_i_1:S1 I
+*I utx_stb_i_6:I2 I
+*CAP
+1 tick_reg_9:Q 0.0
+2 tick_reg_8_i_1:S1 0.00100
+3 utx_stb_i_6:I2 0.00100
+*RES
+1 tick_reg_9:Q tick_reg_8_i_1:S1 526.3636
+2 tick_reg_9:Q utx_stb_i_6:I2 526.3636
+*END
+
+*D_NET txb 0.00400
+*CONN
+*I txb O
+*I txb_reg_0:CE I
+*I txb_reg_1:CE I
+*I txb_reg_2:CE I
+*I txb_reg_3:CE I
+*CAP
+1 txb 0.0
+2 txb_reg_0:CE 0.00100
+3 txb_reg_1:CE 0.00100
+4 txb_reg_2:CE 0.00100
+5 txb_reg_3:CE 0.00100
+*RES
+1 txb txb_reg_0:CE 526.3636
+2 txb txb_reg_1:CE 526.3636
+3 txb txb_reg_2:CE 526.3636
+4 txb txb_reg_3:CE 526.3636
+*END
+
+*D_NET u_tx_n_2 0.00100
+*CONN
+*I u_tx_n_2 O
+*I utx_stb_reg:D I
+*CAP
+1 u_tx_n_2 0.0
+2 utx_stb_reg:D 0.00100
+*RES
+1 u_tx_n_2 utx_stb_reg:D 526.3636
+*END
+
+*D_NET uart_rx 0.00100
+*CONN
+*I uart_rx O
+*I uart_rx_IBUF_inst:I I
+*CAP
+1 uart_rx 0.0
+2 uart_rx_IBUF_inst:I 0.00100
+*RES
+1 uart_rx uart_rx_IBUF_inst:I 526.3636
+*END
+
+*D_NET uart_tx 0.00100
+*CONN
+*I uart_tx_OBUF_inst:O O
+*I uart_tx I
+*CAP
+1 uart_tx_OBUF_inst:O 0.0
+2 uart_tx 0.00100
+*RES
+1 uart_tx_OBUF_inst:O uart_tx 526.3636
+*END
+
+*D_NET uart_tx_OBUF 0.00100
+*CONN
+*I uart_tx_OBUF O
+*I uart_tx_OBUF_inst:I I
+*CAP
+1 uart_tx_OBUF 0.0
+2 uart_tx_OBUF_inst:I 0.00100
+*RES
+1 uart_tx_OBUF uart_tx_OBUF_inst:I 526.3636
+*END
+

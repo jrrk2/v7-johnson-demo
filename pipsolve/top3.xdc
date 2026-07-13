@@ -1,0 +1,7 @@
+set_property PACKAGE_PIN AM39 [get_ports led]
+set_property IOSTANDARD LVCMOS18 [get_ports led]
+set_property CFGBVS GND [current_design]
+set_property CONFIG_VOLTAGE 1.8 [current_design]
+set_property PACKAGE_PIN AH8 [get_ports refclk_p]
+set_property PACKAGE_PIN AH7 [get_ports refclk_n]
+create_clock -period 8.000 -name refclk [get_ports refclk_p]

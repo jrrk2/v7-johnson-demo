@@ -14,7 +14,11 @@
 static const uint8_t my_mac[6] = {0x00, 0x23, 0x01, 0x00, 0x89, 0x07};
 static const uint8_t my_ip[4]  = {192, 168, 1, 42};
 
-static void putchar_(char c) { reg_uart_data = c; }
+// NOTE: in the R0-open build the simpleuart TX never completes, so a
+// reg_uart_data store holds the bus (mem_ready low) and hangs the CPU.
+// Disable UART output so the eth data path runs; re-enable once the UART
+// TX (baud counter) is fixed in the open flow.
+static void putchar_(char c) { (void)c; }
 static void print(const char *s) { while (*s) putchar_(*s++); }
 static void print_hex(uint32_t v, int digits) {
     for (int i = (digits - 1) * 4; i >= 0; i -= 4)
@@ -48,8 +52,15 @@ static void eth_init(const uint8_t *mac) {
 
 static int eth_tx_busy(void) { return eth_read(TPLR_OFFSET) & TPLR_BUSY_MASK; }
 
+// HW trace: LEDs = (pkts<<4) | stage.  Stage marks progress through the
+// packet path so a freeze shows exactly where (upper 4 bits = pkt count).
+static uint32_t trace_pkts;
+static void stage(uint32_t s) { reg_leds = (trace_pkts << 4) | s; }
+
 static void eth_send(const uint8_t *data, int len) {
+    stage(3);                             // 3 = waiting for tx idle
     while (eth_tx_busy()) ;
+    stage(4);                             // 4 = copying to tx buffer
     // copy out as 32-bit words (the hw is 64-bit; halves at +0/+4)
     int words = (len + 3) >> 2;
     for (int i = 0; i < words; i++) {
@@ -59,7 +70,9 @@ static void eth_send(const uint8_t *data, int len) {
                    | ((uint32_t)data[(i << 2) + 3] << 24);
         eth_write(TXBUFF_OFFSET + (i << 2), w);
     }
+    stage(5);                             // 5 = triggering send (TPLR write)
     eth_write(TPLR_OFFSET, len);
+    stage(6);                             // 6 = send triggered, back to loop
 }
 
 // returns length (>0) and fills buf if a frame is pending, else 0
@@ -177,24 +190,12 @@ void main(void) {
     reg_leds = 1;
     reg_uart_clkdiv = 434;      // 115200 @ 50 MHz (single-domain MMCM build)
     reg_leds = 3;
-    print("\r\nethsoc M2: ARP + ICMP echo at 192.168.1.42\r\n");
-
+    reg_leds = 0x09;                    // boot A: before eth_init
     eth_init(my_mac);
+    reg_leds = 0x0A;                    // boot B: eth_init done
 
-    // one-shot MDIO diagnostic (non-blocking for the data path)
-    for (volatile int i = 0; i < 2500000; i++) ;
-    int phy_found = 0;
-    for (int a = 0; a < 32 && !phy_found; a++) {
-        uint16_t id = mdio_read(a, 2);
-        if (id != 0xFFFF && id != 0x0000) {
-            print("mdio: phy at "); print_hex(a, 2);
-            print(" id="); print_hex(id, 4);
-            print_hex(mdio_read(a, 3), 4); print("\r\n");
-            phy_found = 1;
-        }
-    }
-    if (!phy_found) print("mdio: no phy (expected on SGMII; PCS/PMA autonegs)\r\n");
 
+    reg_leds = 0x0B;                   // boot C: entering main loop
     uint32_t pkts = 0, last_status = ~0u;
     for (;;) {
         uint32_t st = reg_pcspma & 0xFFFF;
@@ -206,14 +207,16 @@ void main(void) {
         int len = eth_recv(pkt, sizeof(pkt));
         if (len <= 0) continue;
         pkts++;
-        reg_leds = 3 | (pkts << 2);
+        trace_pkts = pkts;
+        stage(2);                                  // 2 = packet received
         print("rx "); print_dec(len);
         print(" B ");
         for (int i = 0; i < 6; i++) { print_hex(pkt[6 + i], 2); if (i < 5) putchar_(':'); }
         print(" type ");
         print_hex(((uint32_t)pkt[12] << 8) | pkt[13], 4);
-        if (pkt[12] == 0x08 && pkt[13] == 0x06) { handle_arp(len); continue; }
-        if (pkt[12] == 0x08 && pkt[13] == 0x00) { handle_icmp(len); continue; }
+        if (pkt[12] == 0x08 && pkt[13] == 0x06) { handle_arp(len); stage(7); continue; }
+        if (pkt[12] == 0x08 && pkt[13] == 0x00) { handle_icmp(len); stage(8); continue; }
+        stage(1);                                  // 1 = back to idle poll
         print("\r\n");
     }
 }

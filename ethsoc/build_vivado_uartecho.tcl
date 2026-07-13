@@ -1,0 +1,18 @@
+set part xc7vx485tffg1761-2
+create_project -force -in_memory -part $part
+read_verilog vc707_uartecho.v vc707_ethloop.v
+read_xdc uartecho_pins.xdc
+synth_design -top uartecho -part $part -verilog_define VC707
+opt_design
+place_design
+route_design
+write_checkpoint -force vc707_uartecho.dcp
+write_bitstream -force vc707_uartecho.bit
+write_verilog -force -mode design vc707_uartecho_netlist.v
+set fp [open placement_uartecho.txt w]
+foreach c [get_cells -hierarchical -filter {IS_PRIMITIVE && PRIMITIVE_LEVEL != "MACRO"}] {
+    set site [get_property LOC $c]; set bel [get_property BEL $c]
+    if {$site ne "" && $bel ne ""} { puts $fp "$c\t$site\t$bel\t[get_property REF_NAME $c]" }
+}
+close $fp
+puts "UARTECHO_BUILD_DONE"

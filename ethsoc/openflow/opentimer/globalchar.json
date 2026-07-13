@@ -1,0 +1,11 @@
+{
+ "insertion_ns_median": 2.047,
+ "insertion_ns_p95": 2.093,
+ "n_global_sinks": 2466,
+ "model": {
+  "n_spine": 5,
+  "spine_ps": 70,
+  "exit_ps": 1697
+ },
+ "note": "BUFG->sink = exit_ps + n_spine*spine_ps ~= insertion_ns_median*1000"
+}

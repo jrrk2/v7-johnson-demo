@@ -1,0 +1,19 @@
+# PURE flow: yosys synthesises from RTL (no Vivado netlist, no placement stamp)
+read_verilog -lib +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+read_verilog -lib /home/jonathan/v7-johnson-demo/ethsoc/gt_stubs.v
+read_verilog -sv -DVC707 -DRAMB16 /home/jonathan/v7-johnson-demo/ethsoc/ramb16_compat.v /home/jonathan/v7-johnson-demo/ethsoc/arp_ctrl.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/framing_top_sgmii.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/sgmii_soc.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/eth_mac_1g.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/axis_gmii_rx.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/axis_gmii_tx.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/rgmii_lfsr.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/dualmem_widen.sv \
+  /home/jonathan/v7-johnson-demo/ethsoc/dualmem_widen8.sv
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/pcs_pma_flat.v
+read_verilog /home/jonathan/v7-johnson-demo/ethsoc/vc707_arp.v
+hierarchy -top top
+synth_xilinx -top top -family xc7 -nowidelut
+write_json /tmp/arp_pure.json
+stat
