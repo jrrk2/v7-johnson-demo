@@ -1,0 +1,11 @@
+# Load primitive models WITH bodies, convert processes to logic, then blackbox
+# them all -> clean blackbox stubs that retain port directions (no processes).
+read_verilog +/xilinx/cells_sim.v
+read_verilog -lib +/xilinx/cells_xtra.v
+proc
+blackbox
+read_verilog -lib ./gt_stubs.v
+read_verilog ./vc707_arp_netlist_y.v
+hierarchy -top top
+flatten
+opt_clean

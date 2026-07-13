@@ -441,3 +441,35 @@ clean:
 distclean: clean
 	rm -f $(CHIPDB) $(DEPS)/.initialised
 	git submodule deinit -f --all 2>/dev/null || true
+
+# ─── svs_arp: fully-open eth-arp (SGMII ARP responder) ────────────────────
+# Vivado post-synth netlist (checked in) -> yosys json -> SVS topographical
+# placer (separate repo, OCaml/dune) -> carry-slice stamper -> nextpnr-xilinx
+# router2 -> prjxray fasm2frames/xc7frames2bit.  No Vivado anywhere.
+# VALIDATED ON VC707 SILICON 2026-07-13 (arping 9/9, 0.21ms RTT).
+#
+# Needs the SVS placer repo (override SVS=/path):  opam switch 5.3.0 + dune.
+#   macOS:  brew install opam && opam init && opam switch create 5.3.0 \
+#           && opam install dune yojson base
+# NOTE: the SA placement is deterministic for a given yosys json, but a
+# different yosys version can reorder cells and shift the placement; the
+# result should still route + gate, just not bit-identically.
+SVS ?= $(HOME)/System-Verilog-suite
+SVS_PLACER := $(SVS)/_build/default/place_lef.exe
+SVS_ARP_BIT := /tmp/svs_arp.bit
+# The eth-arp GT/SGMII config needs the AUTHORITATIVE prjxray DB (local
+# ground-truth fixes: GT frame addressing, ppip de-shadowing, CLBLM MC31),
+# not the pristine deps/prjxray fetch.  Override if yours lives elsewhere.
+PRJXRAY_AUTH ?= $(HOME)/prjxray
+
+$(SVS_PLACER):
+	@[ -d $(SVS) ] || { echo "SVS placer repo not found at $(SVS) -- set SVS=/path/to/System-Verilog-suite" >&2; exit 1; }
+	cd $(SVS) && eval $$(opam env --switch=5.3.0 2>/dev/null || opam env) && dune build place_lef.exe
+
+svs_arp: $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
+	SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
+	  OUT='$(SVS_ARP_BIT)' bash ethsoc/build_svs_arp.sh
+	@echo "eth-arp open bit: $(SVS_ARP_BIT)  (flash: make svs_arp-flash; then arping 192.168.1.100)"
+
+svs_arp-flash: | $(OFL_BIN)
+	$(OFL_BIN) --cable digilent --freq 15000000 $(SVS_ARP_BIT)
