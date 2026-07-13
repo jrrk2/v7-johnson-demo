@@ -30,8 +30,46 @@ LOCK="flock /tmp/nextpnr.lock"; command -v flock >/dev/null || LOCK=""
 echo "=== 1. netlist -> json (yosys) ==="
 ( cd $ETH && $YOSYS -p "script viv2json.ys" -p "write_json $WORK/arp.json" \
     > $WORK/yosys.log 2>&1 ) || { tail -5 $WORK/yosys.log; exit 1; }
-# viv2json.ys already ends in write_json /tmp/vivado_arp.json; prefer our copy
-[ -s $WORK/arp.json ] || cp /tmp/vivado_arp.json $WORK/arp.json
+[ -s $WORK/arp.json ]
+
+echo "=== 1b. strip GT-pin IBUFs ==="
+# Vivado's netlist puts plain IBUFs on the GT analog pins (sgmii_refclk_p/n,
+# sgmii_rxp/n).  Those pins are IPADs -- the real input buffer is inside the
+# GT macro -- and nextpnr errors binding an IBUF there ("No Bel named
+# IPAD_X2Y8/IOB33/INBUF_EN").  Bypass: merge each such IBUF's output net into
+# its port net and drop the cell (matches the silicon-validated netlist).
+python3 - "$WORK/arp.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+j = json.load(open(p))
+mod = max(j["modules"].values(), key=lambda m: len(m.get("cells", {})))
+cells, ports = mod["cells"], mod["ports"]
+port_bits = {}
+for pn, pd in ports.items():
+    if pn.startswith("sgmii_"):
+        for b in pd.get("bits", []):
+            if isinstance(b, int):
+                port_bits[b] = pn
+drop, remap = [], {}
+for cn, c in cells.items():
+    if c.get("type") == "IBUF":
+        i = c["connections"].get("I", [None])[0]
+        o = c["connections"].get("O", [None])[0]
+        if isinstance(i, int) and i in port_bits and isinstance(o, int):
+            remap[o] = i
+            drop.append(cn)
+for cn in drop:
+    del cells[cn]
+def rewrite(bits):
+    return [remap.get(b, b) if isinstance(b, int) else b for b in bits]
+for c in cells.values():
+    for pn2, bl in c.get("connections", {}).items():
+        c["connections"][pn2] = rewrite(bl)
+for e in mod.get("netnames", {}).values():
+    e["bits"] = rewrite(e.get("bits", []))
+json.dump(j, open(p, "w"))
+print(f"stripped {len(drop)} GT-pin IBUFs: {sorted(drop)}")
+PY
 
 echo "=== 2. floorplan (prjxray tilegrid) ==="
 PRJXRAY_TILEGRID=$PXDB/xc7vx485t/tilegrid.json \
