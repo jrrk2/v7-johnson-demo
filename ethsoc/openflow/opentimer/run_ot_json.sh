@@ -11,6 +11,10 @@ J=$1; FASM=$2; PER=$3; PFX=${4:-des}
 OT=$HOME/OpenTimer/bin/ot-shell
 cd "$HERE"
 python3 json2ot.py "$J" "$PFX"
+# EARLY/min-corner liberty (hold analysis): same netlist, fast-corner calib
+if [ -f "$HERE/calib_min.json" ]; then
+  OT_CALIB="$HERE/calib_min.json" OT_LIB_OUT="$HERE/${PFX}_min.lib" python3 json2ot.py "$J" "$PFX"
+fi
 python3 route2spef.py "$FASM" "$PFX.conn" "$PFX.spef"
 python3 - "$PFX" "$PER" > "$PFX.sdc" <<'PY'
 import sys
@@ -25,26 +29,31 @@ for l in open(pfx + ".conn"):
         if any(s.endswith(":C") for s in snks): clks.add(drv[5:])
     for s in snks:
         if s.startswith("PORT:"): pos.append(s[5:])
-first = None
+# OpenTimer needs set_input_delay AND set_input_transition on the CLOCK ports
+# themselves (all four el/rf combos, -clock self) to seed clock arrivals --
+# without them every downstream at/slack is nan (cf. example/simple/simple.sdc).
+first = None; cname = {}
 for i, c in enumerate(sorted(clks)):
     print(f"create_clock -period {per} -name ck{i} [get_ports {c}]")
+    cname[c] = f"ck{i}"
     if first is None: first = f"ck{i}"
-for p in pis:
+def io4(cmd, val, p, clk):
     for mm in ("-min", "-max"):
         for rf in ("-rise", "-fall"):
-            print(f"set_input_transition 0.020 {mm} {rf} [get_ports {p}]")
-    if p not in clks and first:
-        print(f"set_input_delay 0.0 -max [get_ports {p}] -clock {first}")
-        print(f"set_input_delay 0.0 -min [get_ports {p}] -clock {first}")
+            print(f"{cmd} {val} {mm} {rf} [get_ports {p}] -clock {clk}")
+for p in pis:
+    clk = cname.get(p, first)
+    if not clk: continue
+    io4("set_input_delay", "0", p, clk)
+    io4("set_input_transition", "0.020", p, clk)
 for p in pos:
     print(f"set_load -pin_load 0.004 [get_ports {p}]")
     if first:
-        print(f"set_output_delay 0.0 -max [get_ports {p}] -clock {first}")
-        print(f"set_output_delay 0.0 -min [get_ports {p}] -clock {first}")
+        io4("set_output_delay", "0", p, first)
 PY
 $OT <<EOF 2>&1 | grep -vE "unit.cpp|celllib.cpp:34|threads|loading|added .* celllib"
 set_num_threads 4
-read_celllib -min $HERE/$PFX.lib
+read_celllib -min $HERE/$([ -f $HERE/${PFX}_min.lib ] && echo ${PFX}_min.lib || echo $PFX.lib)
 read_celllib -max $HERE/$PFX.lib
 read_verilog $HERE/$PFX.v
 read_spef $HERE/$PFX.spef

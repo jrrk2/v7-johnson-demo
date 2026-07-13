@@ -40,10 +40,10 @@ SEQ = {"FDRE", "FDSE", "FDPE", "FDCE", "RAMB36E1", "RAMB18E1", "SRL16E", "SRLC32
 # golden Vivado SDF (sdf_calibrate.py).  Overrides the prjxray-SDF defaults.
 import os
 CALIB = {}
-_cf = os.path.join(os.path.dirname(os.path.abspath(__file__)), "calib.json")
+_cf = os.environ.get("OT_CALIB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "calib.json")
 if os.path.exists(_cf):
     CALIB = json.load(open(_cf))
-    print(f"[json2ot] using calibration for {len(CALIB)} cell types from calib.json", file=sys.stderr)
+    print(f"[json2ot] using calibration for {len(CALIB)} cell types from " + _cf + "", file=sys.stderr)
 
 # delay families (slow/worst-case, ns)
 def famdelay(typ):
@@ -157,7 +157,7 @@ for typ, pins in typepins.items():
         L.append('    }')
     L.append('  }')
 L.append('}')
-open(pfx+".lib", "w").write("\n".join(L)+"\n")
+open(os.environ.get("OT_LIB_OUT", pfx+".lib"), "w").write("\n".join(L)+"\n")
 
 # ---- emit netlist ----
 driven, allnets, opins = set(), {"const0","const1"}, set()

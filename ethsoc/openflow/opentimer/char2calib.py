@@ -19,11 +19,15 @@ tsv = sys.argv[1]
 out = sys.argv[2] if len(sys.argv) > 2 else "calib.json"
 
 rows = collections.defaultdict(list)   # (libcell, kind) -> [(slowmax, fanout)]
+rows_min = collections.defaultdict(list)  # (libcell, kind) -> [fastmin] (early corner)
 def kind(typ):
     t = typ.lower()
     if "setup" in t: return "su"
     if "hold" in t: return "hd"
-    if "edge" in t or "clock" in t or t in ("rising_edge","falling_edge"): return "cq"
+    # Vivado types FF clk->Q arcs "Reg Clk to Q" -- match "clk...q" too, else
+    # they get misfiled as comb and the FF cq calibration is lost.
+    if "edge" in t or "clock" in t or ("clk" in t and t.rstrip().endswith("q")) \
+       or t in ("rising_edge","falling_edge"): return "cq"
     return "comb"
 
 for ln in open(tsv):
@@ -34,6 +38,10 @@ for ln in open(tsv):
     except: continue
     if smx <= 0: continue
     rows[(lc, kind(typ))].append((smx, fo))
+    try:
+        fmn = float(p[3])
+        if fmn > 0: rows_min[(lc, kind(typ))].append(fmn)
+    except: pass
 
 def p95(xs):
     xs = sorted(xs);
@@ -61,3 +69,20 @@ for lc, e in per_type.items():
 json.dump(calib, open(out, "w"), indent=1)
 print(f"\nmerged load-aware cq/comb (p95) into {out} for {len(per_type)} cell types "
       f"(su/hd kept from SDF constraints)")
+
+# EARLY/MIN-corner calibration for HOLD analysis: hold checks use the SHORTEST
+# plausible data delay (min corner), so cq/comb = p5 of DELAY_FAST_MIN.
+# su/hd constraint values are copied from the max calib (same tests both corners).
+def p5(xs):
+    xs = sorted(xs)
+    return xs[max(0, int(0.05 * len(xs)))]
+calib_min = {}
+for (lc, k), ds in sorted(rows_min.items()):
+    if k in ("cq", "comb") and ds:
+        calib_min.setdefault(lc, {})[k] = round(p5(ds), 4)
+for lc, e in calib.items():
+    for k in ("su", "hd"):
+        if k in e: calib_min.setdefault(lc, {})[k] = e[k]
+out_min = out.replace(".json", "_min.json")
+json.dump(calib_min, open(out_min, "w"), indent=1)
+print(f"emitted EARLY-corner calib (p5 of fast_min) -> {out_min} for {len(calib_min)} cell types")
