@@ -27,7 +27,18 @@ OUT=${OUT:-/tmp/svs_arp.bit}
 mkdir -p "$WORK"
 LOCK="flock /tmp/nextpnr.lock"; command -v flock >/dev/null || LOCK=""
 
-echo "=== 1. netlist -> json (yosys) ==="
+echo "=== 1. netlist json ==="
+# CANONICAL INPUT: the exact json the silicon-validated bit was placed and
+# routed from (net numbering determines the router's net order; a regenerated
+# json routes DIFFERENTLY on the same placement, and nextpnr can land on a
+# route whose fasm encoding is broken with zero skipped arcs -- seen live:
+# make-built bit dead, 35k-line fasm delta, same placement).  Set
+# REGEN_NETLIST=1 to rebuild via yosys instead (then VERIFY via the gate).
+if [ -z "${REGEN_NETLIST:-}" ] && [ -s $ETH/vivado_arp.json.gz ]; then
+  gunzip -c $ETH/vivado_arp.json.gz > $WORK/arp.json
+  echo "using pinned ethsoc/vivado_arp.json.gz"
+else
+echo "=== 1a. netlist -> json (yosys) ==="
 ( cd $ETH && $YOSYS -p "script viv2json.ys" -p "write_json $WORK/arp.json" \
     > $WORK/yosys.log 2>&1 ) || { tail -5 $WORK/yosys.log; exit 1; }
 [ -s $WORK/arp.json ]
@@ -70,6 +81,7 @@ for e in mod.get("netnames", {}).values():
 json.dump(j, open(p, "w"))
 print(f"stripped {len(drop)} GT-pin IBUFs: {sorted(drop)}")
 PY
+fi
 
 echo "=== 2. floorplan (prjxray tilegrid) ==="
 PRJXRAY_TILEGRID=$PXDB/xc7vx485t/tilegrid.json \
@@ -105,7 +117,13 @@ echo "=== 6. bitstream (prjxray) ==="
 GTCOMMON=$(grep -oE "GTX_COMMON_X[0-9]+Y[0-9]+" $WORK/arp.fasm | head -1)
 [ -n "$GTCOMMON" ] && printf '%s.IBUFDS_GTE2_Y0.CLKCM_CFG\n%s.IBUFDS_GTE2_Y0.CLKRCV_TRST\n' \
   "$GTCOMMON" "$GTCOMMON" >> $WORK/arp.fasm
-PXPY=$PRJXRAY/env/bin/python; [ -x "$PXPY" ] || PXPY=python3
+# Use the DEPS prjxray python env: its package resolves tile segbits via the
+# ALIAS behaviour the silicon-validated frames were built with.  ~/prjxray's
+# env (commit 14eb237 "prefer own segbits over alias") flips bit positions
+# for whole tile classes on virtex7 -> 8066 frame words lost, dead datapath.
+PXPY=$ROOT/deps/prjxray/env/bin/python
+[ -x "$PXPY" ] || PXPY=$PRJXRAY/env/bin/python
+[ -x "$PXPY" ] || PXPY=python3
 XRAY_ALLOW_MISSING_FEATURES=1 $PXPY $PRJXRAY/utils/fasm2frames.py \
   --db-root $PXDB --part $PART $WORK/arp.fasm $WORK/arp.frames > $WORK/f2f.log 2>&1 \
   || { echo F2F FAILED; tail -5 $WORK/f2f.log; exit 1; }
