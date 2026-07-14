@@ -450,7 +450,7 @@ distclean: clean
 #
 # Needs the SVS placer repo (override SVS=/path):  opam switch 5.3.0 + dune.
 #   macOS:  brew install opam && opam init && opam switch create 5.3.0 \
-#           && opam install dune yojson base
+#           && opam install dune yojson
 # NOTE: the SA placement is deterministic for a given yosys json, but a
 # different yosys version can reorder cells and shift the placement; the
 # result should still route + gate, just not bit-identically.
