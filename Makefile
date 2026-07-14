@@ -52,7 +52,7 @@ OPENFLD_DIR    := $(DEPS)/openFPGALoader
 # nextpnr expects) is built from this exact DB; its .bba format is tied to the
 # nextpnr-xilinx commit in the release manifest.json — keep deps/nextpnr-xilinx
 # on that commit.  Bump DEVICE_DB_TAG to adopt a newer release.
-DEVICE_DB_TAG  := device-db-2026-06-09
+DEVICE_DB_TAG  := device-db-2026-07-14
 DEVICE_DB_REL  := https://github.com/openXC7/database-virtex7/releases/download/$(DEVICE_DB_TAG)
 
 CHIPDB_TAG     := $(DEVICE_DB_TAG)
