@@ -51,7 +51,8 @@ for p in pos:
     if first:
         io4("set_output_delay", "0", p, first)
 PY
-$OT <<EOF 2>&1 | grep -vE "unit.cpp|celllib.cpp:34|threads|loading|added .* celllib"
+NP=${OT_NPATHS:-3}
+$OT <<EOF 2>&1 | grep -vE "unit.cpp|celllib.cpp:34|threads|loading|added .* celllib" | tee $HERE/$PFX.ot.rpt
 set_num_threads 4
 read_celllib -min $HERE/$([ -f $HERE/${PFX}_min.lib ] && echo ${PFX}_min.lib || echo $PFX.lib)
 read_celllib -max $HERE/$PFX.lib
@@ -61,6 +62,6 @@ read_sdc $HERE/$PFX.sdc
 update_timing
 report_wns
 report_tns
-report_timing -num_paths 3
-report_timing -num_paths 3 -min
+report_timing -num_paths $NP
+report_timing -num_paths $NP -min
 EOF
