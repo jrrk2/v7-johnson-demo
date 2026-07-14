@@ -1,0 +1,6 @@
+# Silicon-validated svs_arp build artifacts (VC707 ARP 9/9, 2026-07-13/14).
+# Produced on x86-64 Linux (gcc/libstdc++).  nextpnr's route is float-
+# criticality-driven and may legally diverge on other platforms/ISAs --
+# a differing route still needs its own silicon or Vivado-gate validation.
+4c250d815315ca30bc0d02d2ea73ae14fa19b8aa39bb4a8d3883c9b0059df4f0  arp.fasm
+7004d9f81fe38f5f3dc09fb361dfb88e94bf443443fc4bae36f3ad02e8d6ff42  arp.frames

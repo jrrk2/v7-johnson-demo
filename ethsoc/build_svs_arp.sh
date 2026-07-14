@@ -141,4 +141,21 @@ $PRJXRAY/build/tools/xc7frames2bit --part_file $PXDB/$PART/part.yaml \
   --part_name $PART --frm_file $WORK/arp.frames --output_file $OUT > $WORK/f2b.log 2>&1 \
   || { echo F2B FAILED; tail -5 $WORK/f2b.log; exit 1; }
 ls -l $OUT | awk '{print "SVS_ARP BIT:",$5,"bytes ->",$9}'
+# Compare against the silicon-validated golden checksums.  nextpnr's route is
+# float-criticality-driven; other platforms/ISAs may legally produce a
+# DIFFERENT zero-skip route -- which is NOT automatically functional (proven:
+# an alternate zero-skip route of this same placement was dead on silicon).
+GOLD=$ETH/svs_arp.golden.sha256
+if [ -f "$GOLD" ]; then
+  calc() { (sha256sum "$1" 2>/dev/null || shasum -a 256 "$1") | cut -d' ' -f1; }
+  gf=$(grep 'arp.frames$' $GOLD | cut -d' ' -f1)
+  af=$(calc $WORK/arp.frames)
+  if [ "$gf" = "$af" ]; then
+    echo "GOLDEN MATCH: frames identical to the silicon-validated build"
+  else
+    echo "WARNING: frames DIFFER from the silicon-validated golden build."
+    echo "         The route diverged on this platform; validate this bit on"
+    echo "         hardware (arping) or via the Vivado gate before trusting it."
+  fi
+fi
 echo "SVS_ARP_DONE"
