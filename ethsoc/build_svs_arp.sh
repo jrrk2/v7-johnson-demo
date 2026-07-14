@@ -110,9 +110,14 @@ CARRY_FLOORPLAN=$WORK/floorplan.json \
   python3 $SVS/carry_stamp.py $WORK/arp_ft.json $WORK/bels.txt $WORK/arp_stamped.json
 
 echo "=== 5. route (nextpnr router2) ==="
+# Stream the router's phase/iteration lines (full transcript in route.log);
+# a silent 10-20 min route reads as a hang.
 $LOCK env NEXTPNR_ALLOW_CO_5FF_CONTENTION=1 NEXTPNR_SKIP_FAILED_ARCS=1 NEXTPNR_ARC_MAX_VISIT=400000 \
   $NEXTPNR --router router2 --chipdb $CHIPDB --xdc $ETH/r0_pins.xdc \
-  --json $WORK/arp_stamped.json --fasm $WORK/arp.fasm > $WORK/route.log 2>&1 || true
+  --json $WORK/arp_stamped.json --fasm $WORK/arp.fasm 2>&1 \
+  | tee $WORK/route.log \
+  | grep --line-buffered -E "Info: (Packing|Placing|Placed|Running|Routing global|routing clock|SLICE|Max frequency)|iter=|ERROR|unbound" \
+  || true
 SK=$(grep -ac SKIP_FAILED_ARCS $WORK/route.log || true)
 echo "SKIPS=$SK"
 [ "$SK" = 0 ] || { echo "ROUTE INCOMPLETE"; grep -a SKIP_FAILED_ARCS $WORK/route.log | head -5; exit 1; }
