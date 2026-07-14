@@ -1,7 +1,7 @@
 [submodule "deps/nextpnr-xilinx"]
 	path = deps/nextpnr-xilinx
 	url = https://github.com/openXC7/nextpnr-xilinx.git
-	branch = router1-const-routing
+	branch = virtex7-support
 [submodule "deps/prjxray"]
 	path = deps/prjxray
 	url = https://github.com/openXC7/prjxray.git
