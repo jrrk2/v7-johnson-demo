@@ -41,6 +41,10 @@ for ln in open(viv_file, errors="replace"):
     elif s.startswith("Destination:"):
         cur["dst"] = s.split(None, 1)[1]
         cur["ep"] = canon(cur["dst"])
+    elif "ep" in cur and "ct" not in cur and "triggered cell " in s:
+        m = re.search(r"triggered cell (\w+)", s)
+        if m:
+            cur["ct"] = m.group(1)
     elif s.startswith("Data Path Delay:"):
         m = re.search(r"Data Path Delay:\s*(-?[\d.]+)ns\s*\(logic\s*([\d.]+)ns.*route\s*([\d.]+)ns", s)
         if m:
@@ -164,6 +168,29 @@ print(f"  mean ratio OT/Viv : {statistics.mean(ratios):.3f}")
 print(f"  median ratio      : {statistics.median(ratios):.3f}")
 print(f"  fit OT = {slope:.3f}*Viv + {icept:+.3f}    R^2 = {r2:.3f}")
 print(f"  Viv range [{min(xs):.2f}, {max(xs):.2f}]   OT range [{min(ys):.2f}, {max(ys):.2f}]")
+
+# ---------------- endpoint family + scatter TSV (paper figure) ----------------
+def family(v):
+    ct = v.get("ct", "?")
+    pin = v["dst"].rsplit("/", 1)[-1].split("[")[0]
+    if ct.startswith("RAMB"):
+        return "BRAM_ADDR" if pin.startswith("ADDR") else f"BRAM_{pin}"
+    if ct.startswith(("FD",)):
+        return f"FF_{pin}"
+    return f"{ct}_{pin}"
+
+with open("correlation.tsv", "w") as tf:
+    tf.write("vivado_delay\tot_delay\tclass\tendpoint\n")
+    for k, v, y in pairs:
+        tf.write(f"{v['dpd']:.3f}\t{y:.3f}\t{family(v)}\t{v['dst']}\n")
+print(f"\nwrote correlation.tsv ({len(pairs)} points); per-family median OT/Viv:")
+fam = {}
+for k, v, y in pairs:
+    fam.setdefault(family(v), []).append((v["dpd"], y))
+for f_, pts in sorted(fam.items(), key=lambda kv: -len(kv[1])):
+    rr = [y / x for x, y in pts if x > 0.05]
+    print(f"  {f_:14s} n={len(pts):3d}  median {statistics.median(rr):5.3f}"
+          f"  viv~{statistics.median(x for x, _ in pts):5.2f}ns")
 
 pairs.sort(key=lambda p: abs(p[2] - p[1]["dpd"]), reverse=True)
 print("\nworst 10 mismatches (endpoint, ns):")

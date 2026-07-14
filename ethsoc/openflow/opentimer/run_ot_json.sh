@@ -15,7 +15,9 @@ python3 json2ot.py "$J" "$PFX"
 if [ -f "$HERE/calib_min.json" ]; then
   OT_CALIB="$HERE/calib_min.json" OT_LIB_OUT="$HERE/${PFX}_min.lib" python3 json2ot.py "$J" "$PFX"
 fi
-python3 route2spef.py "$FASM" "$PFX.conn" "$PFX.spef"
+# pass the routed json: route2spef reads per-net ROUTING attrs for the
+# per-net Elmore wire model (falls back to the flat FASM census without it)
+python3 route2spef.py "$FASM" "$PFX.conn" "$PFX.spef" "$J"
 python3 - "$PFX" "$PER" > "$PFX.sdc" <<'PY'
 import sys
 pfx, per = sys.argv[1], float(sys.argv[2])

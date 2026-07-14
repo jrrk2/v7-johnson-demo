@@ -83,5 +83,20 @@
  },
  "MUXF8": {
   "comb": 0.145
+ },
+ "wire": {
+  "base": 0.0,
+  "single": 0.1456,
+  "double": 0.0217,
+  "quad": 0.2155,
+  "hex": 0.1384,
+  "long": 0.5344,
+  "imux": 0.2962,
+  "bounce": 0.0,
+  "iface": 0.0,
+  "site": 0.0,
+  "clk": 0.1403,
+  "fanout_per_sink": 0.0,
+  "clock_lump": 0.05
  }
 }

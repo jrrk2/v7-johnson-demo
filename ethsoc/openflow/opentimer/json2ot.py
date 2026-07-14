@@ -7,7 +7,7 @@ primary inputs).  Cell arc delays from the prjxray-SDF families (real xc7).
 
 usage: json2ot.py <flat.json> <out_prefix>   -> <pfx>.v <pfx>.lib <pfx>.conn
 """
-import sys, json, collections
+import sys, json, re, collections
 
 flat, pfx = sys.argv[1], sys.argv[2]
 d = json.load(open(flat))
@@ -46,11 +46,16 @@ def pinbase(typ, p):
         base = base[:-1]
     return base
 CUT = {"MMCME2_ADV", "IBUFDS", "IBUFDS_GTE2", "GTXE2_COMMON", "GTXE2_CHANNEL",
-       "IOBUF", "PLLE2_ADV", "BSCANE2", "BUFH", "BUFR", "BUFMR", "BUFIO",
-       # clock buffers: cut so their output clock nets become clean PIs that
-       # create_clock can drive (otherwise the un-modeled BUFGCTRL poisons every
-       # FF clock arrival with nan -- the ethloop full-chip STA blockage).
-       "BUFGCTRL", "BUFGCE", "BUFGMUX", "BUFGMUX_CTRL", "BUFG"}
+       "IOBUF", "PLLE2_ADV", "BSCANE2"}
+# clock buffers: cut ONLY when the output actually drives clock pins, so the
+# clock nets become clean PIs that create_clock can drive (otherwise the
+# un-modeled BUFGCTRL poisons every FF clock arrival with nan -- the ethloop
+# full-chip STA blockage).  A BUFG on a RESET/CE net (nextpnr $cebuf$*,
+# Vivado _57x_) is a DATA-path buffer: cutting it hid the whole
+# FF->route->BUFG->fo~99 reset cone (64% of the Vivado top-400 endpoints are
+# its FF S/R sinks) and OT saw ~0.4x of the real path.  Keep those.
+CLKBUF = {"BUFGCTRL", "BUFGCE", "BUFGMUX", "BUFGMUX_CTRL", "BUFG",
+          "BUFH", "BUFR", "BUFMR", "BUFIO"}
 SEQ = {"FDRE", "FDSE", "FDPE", "FDCE", "RAMB36E1", "RAMB18E1", "SRL16E", "SRLC32E"}
 # combinational everything else in fabric (LUT*, MUXF*, CARRY4, RAMD*, RAMS*, BUFG/IBUF/OBUF)
 
@@ -110,13 +115,34 @@ for cn, cell in cells.items():
         dirn = pd.get(pin, "input")
         if len(bits) == 1:
             flat_pins.append((pin, netof(bits[0]), dirn))
-            if etyp not in CUT: typepins[etyp][pin] = dirn
+            if etyp not in CUT and etyp not in CLKBUF: typepins[etyp][pin] = dirn
         else:
             for i, b in enumerate(bits):     # yosys JSON is LSB-first
                 pn = f"{pin}{i}"
                 flat_pins.append((pn, netof(b), dirn))
-                if etyp not in CUT: typepins[etyp][pn] = dirn
+                if etyp not in CUT and etyp not in CLKBUF: typepins[etyp][pn] = dirn
     insts.append((etyp, name, flat_pins))
+
+# ---- decide which clock buffers to CUT: only those driving clock pins ----
+CLKSINKS = CLKS | {"CLKARDCLKL", "CLKARDCLKU", "CLKBWRCLKL", "CLKBWRCLKU"}
+net_clksink = collections.Counter()          # net -> #clock-pin sinks
+for etyp, name, flat_pins in insts:
+    if etyp in CUT or etyp in CLKBUF: continue
+    for p, n, dr in flat_pins:
+        if dr != "output" and pinbase(etyp, p) in CLKSINKS:
+            net_clksink[n] += 1
+cutcells = set()
+nkept = 0
+for etyp, name, flat_pins in insts:
+    if etyp not in CLKBUF: continue
+    outnets = [n for p, n, dr in flat_pins if dr == "output"]
+    if any(net_clksink.get(n, 0) for n in outnets):
+        cutcells.add(name)                   # real clock buffer: cut
+    else:                                    # reset/CE buffer: keep as comb
+        nkept += 1
+        for p, n, dr in flat_pins:
+            typepins[etyp][p] = dr
+print(f"json2ot: clock buffers cut {len(cutcells)}, kept as data buffers {nkept}", file=sys.stderr)
 
 # ---- emit lib ----
 def clockpin(typ):
@@ -181,6 +207,8 @@ for typ, pins in typepins.items():
                 rels = [q for q in ins if q.startswith(("CI","CYINIT","S"))]
             elif typ.startswith(("RAMD","RAMS")):
                 rels = [q for q in ins if q.startswith(("RADR","ADR"))]
+            elif typ in CLKBUF:              # kept data-path BUFG: I0/I1 -> O
+                rels = [q for q in ins if re.fullmatch(r"I\d?", q)]
             for r in rels[:8]:
                 L.append(f'      timing () {{ related_pin : "{r}"; cell_rise (scalar) {{ values {sv(dl)}; }} cell_fall (scalar) {{ values {sv(dl)}; }} rise_transition (scalar) {{ values ("0.01"); }} fall_transition (scalar) {{ values ("0.01"); }} }}')
         L.append('    }')
@@ -193,7 +221,7 @@ driven, allnets, opins = set(), {"const0","const1"}, set()
 net_drv, net_snk = {}, {}
 emit = []
 for typ, name, flat_pins in insts:
-    if typ in CUT: continue
+    if typ in CUT or name in cutcells: continue
     conn = ", ".join(f".{p}({n})" for p, n, _ in flat_pins)
     for p, n, dr in flat_pins:
         allnets.add(n)
