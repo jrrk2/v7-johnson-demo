@@ -19,6 +19,12 @@ python3 route2spef.py "$FASM" "$PFX.conn" "$PFX.spef"
 python3 - "$PFX" "$PER" > "$PFX.sdc" <<'PY'
 import sys
 pfx, per = sys.argv[1], float(sys.argv[2])
+# A PI is a clock iff it drives a sequential-cell clock pin.  Pin names must
+# match json2ot.py's CLKS set: SLICE FFs clock on CK, LUTRAM/SRL on CLK (not
+# ":C" -- testing only ":C" made clks empty -> first=None -> EMPTY SDC ->
+# "added 0 sdc commands" -> nan WNS everywhere).
+CLKPINS = {"C", "CK", "CLK", "CLKARDCLK", "CLKBWRCLK", "WCLK",
+           "CLKARDCLKL", "CLKARDCLKU", "CLKBWRCLKL", "CLKBWRCLKU"}
 clks = set(); pis = []; pos = []
 for l in open(pfx + ".conn"):
     p = l.rstrip("\n").split("\t")
@@ -26,7 +32,7 @@ for l in open(pfx + ".conn"):
     drv = p[1]; snks = p[2].split() if len(p) > 2 else []
     if drv.startswith("PORT:"):
         pis.append(drv[5:])
-        if any(s.endswith(":C") for s in snks): clks.add(drv[5:])
+        if any(s.rsplit(":", 1)[-1] in CLKPINS for s in snks): clks.add(drv[5:])
     for s in snks:
         if s.startswith("PORT:"): pos.append(s[5:])
 # OpenTimer needs set_input_delay AND set_input_transition on the CLOCK ports
@@ -64,4 +70,6 @@ report_wns
 report_tns
 report_timing -num_paths $NP
 report_timing -num_paths $NP -min
+dump_at -o $HERE/$PFX.at
+dump_slack -o $HERE/$PFX.slack
 EOF

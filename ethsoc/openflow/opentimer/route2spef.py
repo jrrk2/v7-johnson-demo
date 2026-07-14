@@ -58,7 +58,10 @@ with open(out, "w") as f:
         # CLOCK nets ride the dedicated low-skew global tree, NOT fabric routing:
         # the generic fanout-lumped delay (~2ns at fanout ~900) fabricates huge
         # capture-clock skew and fake hold violations.  Detect by sink pins.
-        nck = sum(1 for s in snks if s.endswith(":C") or s.endswith(":CLK"))
+        # pin-name set must match json2ot.py's CLKS (FFs clock on CK, not C)
+        nck = sum(1 for s in snks if s.rsplit(":", 1)[-1] in
+                  ("C", "CK", "CLK", "CLKARDCLK", "CLKBWRCLK", "WCLK",
+                   "CLKARDCLKL", "CLKARDCLKU", "CLKBWRCLKL", "CLKBWRCLKU"))
         is_clock = fo > 0 and nck * 2 >= fo
         R = (0.050 if is_clock else net_delay(fo)) / C   # Elmore R*C (ns)
         totcap = C * fo

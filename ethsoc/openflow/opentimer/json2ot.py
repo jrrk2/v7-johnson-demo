@@ -14,19 +14,37 @@ d = json.load(open(flat))
 m = d["modules"][max(d["modules"], key=lambda k: len(d["modules"][k].get("cells", {})))]
 cells, nets = m["cells"], m.get("netnames", {})
 
-# bit -> net name
+def sanitize(s):
+    return s.replace("$","_").replace(".","_").replace(":","_").replace("[","_").replace("]","").replace("\\","").replace("/","_")
+
+# bit -> net name.  Sanitization can COLLIDE distinct nets (e.g. yosys emits
+# both "i_arp.sender_mac[0]" and "i_arp.sender_mac_0" for different bits ->
+# both sanitize to i_arp_sender_mac_0): the verilog then merges two nets into
+# one multi-driven wire while the conn/SPEF keeps one driver, and OpenTimer
+# reports "pin X not found in rctree Y".  Uniquify with a __b<bit> suffix.
 bit2name = {}
+_used_names = set()
 for nn, nv in nets.items():
     for b in nv["bits"]:
-        if isinstance(b, int):
-            bit2name.setdefault(b, nn.replace("$", "_").replace(".", "_").replace(":", "_")
-                                  .replace("[", "_").replace("]", "").replace("\\", "").replace("/", "_"))
+        if isinstance(b, int) and b not in bit2name:
+            name = sanitize(nn)
+            if name in _used_names:
+                name = f"{name}__b{b}"
+            bit2name[b] = name
+            _used_names.add(name)
 def netof(b):
     if b in ("0", 0): return "const0"
     if b in ("1", 1): return "const1"
     return bit2name.get(b, f"n{b}")
 
 CLKS = {"C", "CK", "CLK", "CLKARDCLK", "CLKBWRCLK", "WCLK"}
+def pinbase(typ, p):
+    """digit-stripped pin base; RAMB repack splits pins into L/U halves
+    (CLKARDCLKL/CLKARDCLKU etc) -- strip the half suffix for RAMB types."""
+    base = "".join(ch for ch in p if not ch.isdigit())
+    if typ.startswith("RAMB") and len(base) > 2 and base.endswith(("L", "U")):
+        base = base[:-1]
+    return base
 CUT = {"MMCME2_ADV", "IBUFDS", "IBUFDS_GTE2", "GTXE2_COMMON", "GTXE2_CHANNEL",
        "IOBUF", "PLLE2_ADV", "BSCANE2", "BUFH", "BUFR", "BUFMR", "BUFIO",
        # clock buffers: cut so their output clock nets become clean PIs that
@@ -70,12 +88,20 @@ def out_clock(typ, pin):
 # ---- pass 1: collect per-type pin sets (name -> dir), instances ----
 typepins = collections.defaultdict(dict)   # type -> {expanded_pin: dir}
 insts = []                                  # (type, name, [(pin, net, dir)])
-def sanitize(s):
-    return s.replace("$","_").replace(".","_").replace(":","_").replace("[","_").replace("]","").replace("\\","").replace("/","_")
+# (cell names use the same sanitize() defined above for nets)
 
 for cn, cell in cells.items():
     typ = cell["type"]
     if typ in ("VCC", "GND"): continue
+    # nextpnr's packer REWRITES Unisim types to site-slot types on the stamped
+    # netlist (FDRE->SLICE_FFX, LUT6->SLICE_LUTX, MUXF7->SELMUX2_1,
+    # RAMB36E1->RAMB36E1_RAMB36E1, OBUF->IOB18_OUTBUF_DCIEN, ...).  Classify
+    # by X_ORIG_TYPE so SEQ/CUT/calibration still see the logical primitive —
+    # a SLICE_FFX modelled as combinational leaves the design with NO clocked
+    # endpoint (WNS nan, "no critical path found").  Pin names stay the
+    # repacked ones (CK/CLK are already in CLKS).
+    etyp = cell.get("attributes", {}).get("X_ORIG_TYPE") or typ
+    if etyp in ("VCC", "GND"): continue
     pd = cell.get("port_directions", {})
     conns = cell["connections"]
     name = sanitize(cn)
@@ -84,19 +110,18 @@ for cn, cell in cells.items():
         dirn = pd.get(pin, "input")
         if len(bits) == 1:
             flat_pins.append((pin, netof(bits[0]), dirn))
-            if typ not in CUT: typepins[typ][pin] = dirn
+            if etyp not in CUT: typepins[etyp][pin] = dirn
         else:
             for i, b in enumerate(bits):     # yosys JSON is LSB-first
                 pn = f"{pin}{i}"
                 flat_pins.append((pn, netof(b), dirn))
-                if typ not in CUT: typepins[typ][pn] = dirn
-    insts.append((typ, name, flat_pins))
+                if etyp not in CUT: typepins[etyp][pn] = dirn
+    insts.append((etyp, name, flat_pins))
 
 # ---- emit lib ----
 def clockpin(typ):
     for p in typepins[typ]:
-        base = "".join(ch for ch in p if not ch.isdigit())
-        if base in CLKS: return p
+        if pinbase(typ, p) in CLKS: return p
     return None
 
 L = ['library (xc7auto) {', '  delay_model : table_lookup;',
@@ -122,7 +147,7 @@ for typ, pins in typepins.items():
         nxt = "D" if "D" in pins else next((p for p in pins if pins[p]!="output" and p not in CLKS), "D")
         L.append(f'    ff (IQ,IQN) {{ clocked_on : "{ck}"; next_state : "{nxt}"; }}')
     for p in ins:
-        base = "".join(ch for ch in p if not ch.isdigit())
+        base = pinbase(typ, p)
         is_clk = base in CLKS
         if is_clk:
             L.append(f'    pin ({p}) {{ direction : input; clock : true; capacitance : 0.001; }}')
@@ -142,7 +167,11 @@ for typ, pins in typepins.items():
         if seq:
             oc = ck
             if typ.startswith("RAMB"):
-                oc = "CLKARDCLK" if p.startswith(("DOA","DOPA")) else ("CLKBWRCLK" if p.startswith(("DOB","DOPB")) else ck)
+                want = "CLKARDCLK" if p.startswith(("DOA","DOPA")) else ("CLKBWRCLK" if p.startswith(("DOB","DOPB")) else None)
+                # repacked RAMBs split the clock into L/U half-pins
+                # (CLKARDCLKL/CLKARDCLKU): related_pin must be a REAL pin
+                if want:
+                    oc = next((q for q in ins if q.startswith(want)), ck)
             L.append(f'      timing () {{ related_pin : "{oc}"; timing_type : rising_edge; cell_rise (scalar) {{ values {sv(fd["cq"])}; }} cell_fall (scalar) {{ values {sv(fd["cq"])}; }} rise_transition (scalar) {{ values ("0.01"); }} fall_transition (scalar) {{ values ("0.01"); }} }}')
         else:
             dl = fd.get("comb", 0.1)
