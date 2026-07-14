@@ -460,7 +460,7 @@ SVS_ARP_BIT := /tmp/svs_arp.bit
 # The eth-arp GT/SGMII config needs the AUTHORITATIVE prjxray DB (local
 # ground-truth fixes: GT frame addressing, ppip de-shadowing, CLBLM MC31),
 # not the pristine deps/prjxray fetch.  Override if yours lives elsewhere.
-PRJXRAY_AUTH ?= $(HOME)/prjxray
+PRJXRAY_AUTH ?= $(shell [ -d $(HOME)/prjxray/database/virtex7 ] && echo $(HOME)/prjxray || echo $(PRJXRAY_DIR))
 
 $(SVS_PLACER):
 	@[ -d $(SVS) ] || { echo "SVS placer repo not found at $(SVS) -- set SVS=/path/to/System-Verilog-suite" >&2; exit 1; }

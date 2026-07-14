@@ -17,7 +17,11 @@ ETH=$ROOT/ethsoc
 SVS=${SVS:-$HOME/System-Verilog-suite}
 YOSYS=${YOSYS:-yosys}
 PRJXRAY=${PRJXRAY:-$HOME/prjxray}
+# Fresh machines have no ~/prjxray checkout: the deps clone + the extracted
+# device-db release (make prjxray-db) ARE the ground truth there.
+[ -d "$PRJXRAY/database/virtex7" ] || PRJXRAY=$ROOT/deps/prjxray
 PXDB=$PRJXRAY/database/virtex7
+[ -d "$PXDB" ] || { echo "no virtex7 DB at $PXDB -- run 'make prjxray-db' first" >&2; exit 1; }
 PART=xc7vx485tffg1761-2
 NEXTPNR=${NEXTPNR:-$ROOT/deps/nextpnr-xilinx/build-opt/nextpnr-xilinx}
 [ -x "$NEXTPNR" ] || NEXTPNR=$ROOT/deps/nextpnr-xilinx/build/nextpnr-xilinx
@@ -85,7 +89,8 @@ fi
 
 echo "=== 2. floorplan (prjxray tilegrid) ==="
 PRJXRAY_TILEGRID=$PXDB/xc7vx485t/tilegrid.json \
-  python3 $SVS/xilinx_lef/gen_floorplan.py $WORK/floorplan.json > $WORK/floorplan.log 2>&1
+  python3 $SVS/xilinx_lef/gen_floorplan.py $WORK/floorplan.json > $WORK/floorplan.log 2>&1 \
+  || { echo "FLOORPLAN FAILED:"; tail -5 $WORK/floorplan.log; exit 1; }
 
 echo "=== 3. SVS place ==="
 ( cd $SVS && \
