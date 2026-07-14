@@ -103,7 +103,7 @@ echo "=== 3. SVS place ==="
   BELS_OUT=$WORK/bels.txt TOPO_FT_JSON=$WORK/arp_ft.json \
   TOPO_STAMPED_JSON=$WORK/arp_stamped_ocaml.json PLACED_OUT=$WORK/placed.txt \
   $SVS/_build/default/place_lef.exe $WORK/floorplan.json $WORK/arp.json \
-  2>&1 | grep -E "FOM:|feedthroughs|carry-stamp" ) ; : > $WORK/fixnets.txt
+  2>&1 | grep --line-buffered -E "FOM:|feedthroughs|carry-stamp|SA .*moves=|site physmap|mode=" ) ; : > $WORK/fixnets.txt
 
 echo "=== 4. carry-slice completion ==="
 CARRY_FLOORPLAN=$WORK/floorplan.json \
