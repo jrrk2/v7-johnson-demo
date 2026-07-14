@@ -231,7 +231,7 @@ else ifeq ($(UNAME_S),Linux)
 NEXTPNR_CMAKE  := $(if $(SYS_PYTHON),-DPython3_EXECUTABLE=$(SYS_PYTHON))
 endif
 
-$(NEXTPNR_BIN): $(DEPS)/.initialised
+$(NEXTPNR_BIN): $(DEPS)/.initialised $(NEXTPNR_DIR)/xilinx/pack_dram.cc $(NEXTPNR_DIR)/xilinx/pack_clocking_xc7.cc $(NEXTPNR_DIR)/common/router2.cc
 ifeq ($(UNAME_S),Darwin)
 	@test -x "$(BREW_LLVM)/bin/clang++" || { \
 	   echo "Homebrew LLVM clang not found — run 'make deps' (or 'brew install llvm')." >&2; \
@@ -466,7 +466,17 @@ $(SVS_PLACER):
 	@[ -d $(SVS) ] || { echo "SVS placer repo not found at $(SVS) -- set SVS=/path/to/System-Verilog-suite" >&2; exit 1; }
 	cd $(SVS) && eval $$(opam env --switch=5.3.0 2>/dev/null || opam env) && dune build place_lef.exe
 
-svs_arp: $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
+# Re-sync submodules whenever the parent's pinned commits moved (a plain
+# `git pull` does NOT update submodules; the .initialised stamp runs once).
+.PHONY: submodules-sync
+submodules-sync: | $(DEPS)/.initialised
+	@git submodule sync --quiet
+	@if git submodule status | grep -q '^+'; then \
+	   echo "== submodules out of sync with pinned commits -- updating =="; \
+	   git submodule update --init --recursive; \
+	 fi
+
+svs_arp: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
 	SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
 	  OUT='$(SVS_ARP_BIT)' bash ethsoc/build_svs_arp.sh
 	@echo "eth-arp open bit: $(SVS_ARP_BIT)  (flash: make svs_arp-flash; then arping 192.168.1.100)"
