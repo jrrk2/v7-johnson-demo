@@ -32,6 +32,21 @@ mkdir -p "$WORK"
 LOCK="flock /tmp/nextpnr.lock"; command -v flock >/dev/null || LOCK=""
 
 echo "=== 1. netlist json ==="
+# SVS_SYNTH=1: synthesize from RTL SOURCE with the SVS pipeline (verible
+# parse -> unroll/inline/iflift/blocking_subst/meminfer/memlower/srl_infer
+# -> gate_map wrappers + PCS passthrough -> flatten -> nextpnr json).
+# Silicon-validated frontend (15-bug campaign, 2026-07-18); the open
+# P&R of THIS netlist is fresh territory -- gate on SKIPS=0 + hardware.
+if [ -n "${SVS_SYNTH:-}" ]; then
+  echo "=== 1s. SVS synthesis (arp_open.lua) ==="
+  mkdir -p /tmp/svs_arp_synth_build
+  ( cd "$SVS" && MEMLOWER_FPGA=1 FPGA_LEC_NAMES=1 \
+      ./_build/default/sv_suite.exe script $ETH/svs_race/arp_open.lua \
+      > $WORK/svs_synth.log 2>&1 ) \
+    || { echo "SVS SYNTH FAILED:"; tail -8 $WORK/svs_synth.log; exit 1; }
+  [ /tmp/svs_arp_synth_build/arp.json -ef $WORK/arp.json ] || cp /tmp/svs_arp_synth_build/arp.json $WORK/arp.json
+  grep -aE 'WROTE|gate_map|PASS-THROUGH' $WORK/svs_synth.log | tail -3
+else
 # CANONICAL INPUT: the exact json the silicon-validated bit was placed and
 # routed from (net numbering determines the router's net order; a regenerated
 # json routes DIFFERENTLY on the same placement, and nextpnr can land on a
@@ -86,6 +101,7 @@ json.dump(j, open(p, "w"))
 print(f"stripped {len(drop)} GT-pin IBUFs: {sorted(drop)}")
 PY
 fi
+fi
 
 echo "=== 2. floorplan (prjxray tilegrid) ==="
 PRJXRAY_TILEGRID=$PXDB/xc7vx485t/tilegrid.json \
@@ -114,7 +130,7 @@ echo "=== 5. route (nextpnr router2) ==="
 # a silent 10-20 min route reads as a hang.
 $LOCK env NEXTPNR_ALLOW_CO_5FF_CONTENTION=1 NEXTPNR_SKIP_FAILED_ARCS=1 NEXTPNR_ARC_MAX_VISIT=400000 \
   $NEXTPNR --router router2 --chipdb $CHIPDB --xdc $ETH/r0_pins.xdc \
-  --json $WORK/arp_stamped.json --fasm $WORK/arp.fasm 2>&1 \
+  --json $WORK/arp_stamped.json --fasm $WORK/arp.fasm --write $WORK/arp_routed.json 2>&1 \
   | tee $WORK/route.log \
   | grep --line-buffered -E "Info: (Packing|Placing|Placed|Running|Routing global|routing clock|SLICE|Max frequency)|iter=|ERROR|unbound" \
   || true

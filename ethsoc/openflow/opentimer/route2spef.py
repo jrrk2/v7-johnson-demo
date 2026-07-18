@@ -204,7 +204,23 @@ def main():
         src = "fit" if "wire" in calib else "seed"
         print(f"[route2spef] per-net Elmore ({src} constants): route trees for "
               f"{len(netfeats)}/{nnets} nets from {rjson}", file=sys.stderr)
-    else:
+    # flat design-wide fallback (ALWAYS defined: the per-net branch can still
+    # hit the `dly=[NETD]*fo` leaf for a net with no route tree)
+    HOPD, LONGD = 0.060, 0.120
+    npips = longp = 0
+    for ln in open(fasm, errors="replace"):
+        p = ln.strip().split(".")
+        if len(p) == 3 and p[0].startswith(("INT_L", "INT_R")):
+            npips += 1
+            if any(k in p[1] + p[2] for k in ("LH", "LV", "LVB", "6BEG", "6END")):
+                longp += 1
+    avg_hops = max(1.0, npips / max(1, nnets))
+    avg_hop_delay = (longp * LONGD + (npips - longp) * HOPD) / max(1, npips)
+    NETD = avg_hops * avg_hop_delay
+    if not netfeats:
+        print(f"[route2spef] flat model {NETD:.3f} ns/net (no per-net routing)",
+              file=sys.stderr)
+    if False:
         # fallback: flat design-wide fanout lump from the FASM pip census
         HOPD, LONGD = 0.060, 0.120
         npips = longp = 0

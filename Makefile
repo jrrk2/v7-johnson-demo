@@ -110,7 +110,7 @@ TG_JSON        := $(TG_DIR)/top.json
 
 # ─── high-level targets ────────────────────────────────────────────────
 
-.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help
+.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash
 
 # Keep intermediates even if a recipe exits non-zero (the telegraph route
 # step does, on its skipped don't-care CARRY4.S arcs + timing miss; the calc
@@ -483,3 +483,66 @@ svs_arp: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK)
 
 svs_arp-flash: | $(OFL_BIN)
 	$(OFL_BIN) --cable digilent --freq 15000000 $(SVS_ARP_BIT)
+
+# ---------------------------------------------------------------------------
+# eth-arp from SVS SYNTHESIS through the fully-open backend, plus OpenTimer.
+#   svs_arp_synth      RTL source -> SVS synth (arp_open.lua: gate_map
+#                      wrappers + primitive-PCS passthrough, the 15-bug-
+#                      campaign-validated frontend) -> SVS topographical
+#                      placer -> carry_stamp -> nextpnr router2 -> fasm ->
+#                      prjxray frames -> bitstream.  Also writes the ROUTED
+#                      json (per-net ROUTING attrs) for the STA step.
+#   svs_arp_synth-sta  OpenTimer two-corner STA of that routed design
+#                      (json2ot Liberty from prjxray SDF calibration,
+#                      route2spef per-net Elmore wires, auto-SDC clock
+#                      seeding).  OT_PERIOD_NS defaults to 8.0 = the
+#                      125 MHz eth domain; the 50 MHz cpu domain is then
+#                      over-constrained 2.5x -- read per-clock slacks in
+#                      the report, not just the single WNS.
+#   svs_arp_synth-timing  chain both.
+# NOTE unlike `svs_arp` (pinned silicon-validated Vivado-netlist json),
+# the synth flow re-places and re-routes fresh: SKIPS=0 is gated in the
+# script but a zero-skip route is NOT automatically functional -- validate
+# on hardware (make svs_arp_synth-flash; arping 192.168.1.100).
+#
+# KNOWN BLOCKER (2026-07-18): synth->place SUCCEEDS; nextpnr-xilinx's
+# timing analysis then aborts on "combinatorial loops" whose SCC contains
+# ONLY the PCS rx_elastic_buffer RAM64M read outputs (DPR O6) feeding their
+# rd_data FFs -- a DAG, so a false positive from nextpnr mis-modelling the
+# async-read RAM64M packed into a SLICEM shared W/R LUT.  The pinned
+# `svs_arp` netlist (Vivado RAM64M w/ RTL_RAM_* attrs) packs cleanly; the
+# SVS-emitted one lacks whatever nextpnr keys on.  Under investigation;
+# until resolved, svs_arp_synth-sta runs against a routable design via
+# STA_JSON/STA_FASM (below).
+SVS_ARP_SYNTH_BIT := /tmp/svs_arp_synth.bit
+SVS_ARP_SYNTH_WORK := /tmp/svs_arp_synth_build
+OT_PERIOD_NS ?= 8.0
+SVS_SUITE_EXE := $(SVS)/_build/default/sv_suite.exe
+
+svs_arp_synth: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
+	@[ -x $(SVS_SUITE_EXE) ] || { echo "sv_suite.exe not built at $(SVS_SUITE_EXE) -- dune build in $(SVS)" >&2; exit 1; }
+	SVS_SYNTH=1 SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
+	  WORK='$(SVS_ARP_SYNTH_WORK)' OUT='$(SVS_ARP_SYNTH_BIT)' bash ethsoc/build_svs_arp.sh
+	@echo "SVS-synth open bit: $(SVS_ARP_SYNTH_BIT)  routed json: $(SVS_ARP_SYNTH_WORK)/arp_routed.json"
+
+# OpenTimer two-corner STA.  STA_JSON / STA_FASM select the design: default is
+# the SVS-synth routed output; if the synth route was blocked (see KNOWN
+# BLOCKER note above svs_arp_synth) point them at any placed+routed pair, e.g.
+#   make svs_arp_synth-sta STA_JSON=/tmp/svs_arp_build/arp_stamped.json \
+#                          STA_FASM=/tmp/svs_arp_build/arp.fasm
+# route2spef uses per-net Elmore from the routed json's ROUTING attrs, else a
+# flat FASM-census wire model (first-order; over-penalises long carry chains).
+STA_JSON ?= $(SVS_ARP_SYNTH_WORK)/arp_routed.json
+STA_FASM ?= $(SVS_ARP_SYNTH_WORK)/arp.fasm
+svs_arp_synth-sta:
+	@[ -s $(STA_JSON) ] || { echo "no STA json ($(STA_JSON)) -- run 'make svs_arp_synth' or set STA_JSON=/path" >&2; exit 1; }
+	@[ -s $(STA_FASM) ] || { echo "no STA fasm ($(STA_FASM)) -- set STA_FASM=/path" >&2; exit 1; }
+	OT_NPATHS=10 bash ethsoc/openflow/opentimer/run_ot_json.sh \
+	  $(STA_JSON) $(STA_FASM) $(OT_PERIOD_NS) svsarp
+	@echo "--- OpenTimer report: ethsoc/openflow/opentimer/svsarp.ot.rpt ---"
+	@grep -aE "WNS|slack|VIOLATED|MET" ethsoc/openflow/opentimer/svsarp.ot.rpt | head -8
+
+svs_arp_synth-timing: svs_arp_synth svs_arp_synth-sta
+
+svs_arp_synth-flash: | $(OFL_BIN)
+	$(OFL_BIN) --cable digilent --freq 15000000 $(SVS_ARP_SYNTH_BIT)
