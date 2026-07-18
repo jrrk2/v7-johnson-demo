@@ -137,7 +137,7 @@ module gig_ethernet_pcs_pma_0 #(
   (* EXAMPLE_SIMULATION = "0" *) 
   (* X_CORE_INFO = "gig_ethernet_pcs_pma_v16_2_0,Vivado 2020.1.1" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
-  gig_ethernet_pcs_pma_0_support inst
+  gig_ethernet_pcs_pma_0_support #(.C_GT_LOOPBACK(C_GT_LOOPBACK)) inst
        (.an_adv_config_vector(an_adv_config_vector),
         .an_interrupt(an_interrupt),
         .an_restart_config(an_restart_config),
@@ -178,7 +178,12 @@ module gig_ethernet_pcs_pma_0 #(
 endmodule
 
 (* DowngradeIPIdentifiedWarnings = "yes" *) (* EXAMPLE_SIMULATION = "0" *) 
-module gig_ethernet_pcs_pma_0_support
+module gig_ethernet_pcs_pma_0_support #(
+    // Threaded down from gig_ethernet_pcs_pma_0 so the GTXE2 LOOPBACK pin
+    // below resolves to a constant during hierarchical elaboration instead
+    // of leaking out as an undeclared, undriven `C_GT_LOOPBACK` net.
+    parameter [2:0] C_GT_LOOPBACK = 3'b000
+  )
    (gtrefclk_p,
     gtrefclk_n,
     gtrefclk_out,
