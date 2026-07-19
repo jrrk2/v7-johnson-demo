@@ -26,5 +26,5 @@ while k<=cnt do
   k=k+1
 end
 local net = svd.flatten_struct(result, "eth_macro")
-svd.write_netlist_edif(net, "/tmp/eb/hybrid2/eth_macro.edf")
-print("WROTE /tmp/eb/hybrid2/eth_macro.edf")
+svd.write_netlist_edif(net, (os.getenv("W") or "/tmp/svs_hybrid") .. "/eth_macro.edf")
+print("WROTE " .. (os.getenv("W") or "/tmp/svs_hybrid") .. "/eth_macro.edf")

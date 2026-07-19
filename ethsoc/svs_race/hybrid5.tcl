@@ -1,5 +1,5 @@
-set D /home/jonathan/v7-johnson-demo/ethsoc
-set H /tmp/eb/hybrid5
+set D [expr {[info exists ::env(ETH)] ? $::env(ETH) : "/home/jonathan/v7-johnson-demo/ethsoc"}]
+set H [expr {[info exists ::env(W)] ? $::env(W) : "/tmp/svs_hybrid"}]
 read_verilog -sv [list $D/framing_top_sgmii.sv $D/sgmii_soc.sv $D/eth_mac_1g.sv \
     $D/axis_gmii_rx.sv $D/axis_gmii_tx.sv $D/rgmii_lfsr.sv $D/dualmem_widen.sv $D/dualmem_widen8.sv \
     $D/eth_macro.sv $D/dualmem64.sv]

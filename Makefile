@@ -110,7 +110,7 @@ TG_JSON        := $(TG_DIR)/top.json
 
 # ─── high-level targets ────────────────────────────────────────────────
 
-.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash
+.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash svs_hybrids svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp svs_diag
 
 # Keep intermediates even if a recipe exits non-zero (the telegraph route
 # step does, on its skipped don't-care CARRY4.S arcs + timing miss; the calc
@@ -546,3 +546,37 @@ svs_arp_synth-timing: svs_arp_synth svs_arp_synth-sta
 
 svs_arp_synth-flash: | $(OFL_BIN)
 	$(OFL_BIN) --cable digilent --freq 15000000 $(SVS_ARP_SYNTH_BIT)
+
+# ---------------------------------------------------------------------------
+# Silicon-bisection HYBRIDS: golden Vivado shell + ONE SVS-synthesized layer
+# linked as an EDIF black-box.  Each isolates a slice of the eth stack; all
+# five reached 15/15 ARP on VC707 during the 2026-07 SVS bug campaign.
+#   svs_hybrid_ethmacro   SVS eth_macro   in golden top+framing+arp
+#   svs_hybrid_sgmii      SVS sgmii_soc   in golden everything
+#   svs_hybrid_framing    SVS framing_top in golden top+arp
+#   svs_hybrid_arp        SVS arp_ctrl    in golden eth stack
+# Needs a full Vivado (VIVADO=/path; default /opt/Xilinx/Vivado/2020.1).
+# Bit lands in $$W (default /tmp/svs_hybrid_<layer>); flash with
+# svs_hybrid_<layer>-flash.
+VIVADO ?= /opt/Xilinx/Vivado/2020.1/bin/vivado
+ETHSOC ?= $(CURDIR)/ethsoc
+define SVS_HYBRID_RULE
+svs_hybrid_$(1):
+	@[ -x $(SVS_SUITE_EXE) ] || { echo "sv_suite.exe not built at $(SVS_SUITE_EXE)" >&2; exit 1; }
+	SVS='$(SVS)' VIVADO='$(VIVADO)' W='/tmp/svs_hybrid_$(1)' \
+	  bash ethsoc/svs_race/build_hybrid.sh $(1)
+svs_hybrid_$(1)-flash: | $(OFL_BIN)
+	$(OFL_BIN) --cable digilent --freq 15000000 $$(ls /tmp/svs_hybrid_$(1)/*.bit | head -1)
+endef
+$(foreach L,ethmacro sgmii framing arp,$(eval $(call SVS_HYBRID_RULE,$(L))))
+svs_hybrids: svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp
+
+# PCS status-observer diagnostic (sgmii_soc alone, TX idle; DIP-paged status/
+# sticky/heartbeat LEDs -- vc707_sgmii_diag.v).  diag_gold.bit = all-Vivado
+# baseline; diag_svs.bit links the SVS sgmii_soc EDIF (needs svs_hybrid_sgmii
+# first, or SGMII_EDIF=/path).  Both land in $$W (/tmp/svs_diag).
+svs_diag:
+	W='/tmp/svs_diag' ETH='$(ETHSOC)' $(VIVADO) -mode batch \
+	  -source ethsoc/svs_race/diag.tcl -journal /tmp/svs_diag/d.jou -log /tmp/svs_diag/d.log \
+	  || { echo "(diag_svs half needs svs_hybrid_sgmii or SGMII_EDIF=)"; }
+	@ls -l /tmp/svs_diag/*.bit 2>/dev/null

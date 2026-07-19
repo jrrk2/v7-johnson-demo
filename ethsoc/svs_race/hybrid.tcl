@@ -1,5 +1,5 @@
-set D /home/jonathan/v7-johnson-demo/ethsoc
-set H /tmp/eb/hybrid2
+set D [expr {[info exists ::env(ETH)] ? $::env(ETH) : "/home/jonathan/v7-johnson-demo/ethsoc"}]
+set H [expr {[info exists ::env(W)] ? $::env(W) : "/tmp/svs_hybrid"}]
 # golden wrappers, eth_macro black-boxed (do NOT read eth_macro.sv)
 foreach f {arp_ctrl framing_top_sgmii dualmem64 dualmem_widen dualmem_widen8} { read_verilog -sv $D/$f.sv }
 foreach f {async_fifo ramb16_compat vc707_arp} { read_verilog $D/$f.v }

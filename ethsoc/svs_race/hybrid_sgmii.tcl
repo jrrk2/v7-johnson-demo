@@ -1,5 +1,5 @@
-set D /home/jonathan/v7-johnson-demo/ethsoc
-set H3 /tmp/eb/hybrid3
+set D [expr {[info exists ::env(ETH)] ? $::env(ETH) : "/home/jonathan/v7-johnson-demo/ethsoc"}]
+set H3 [expr {[info exists ::env(W)] ? $::env(W) : "/tmp/svs_hybrid"}]
 # golden everything, sgmii_soc black-boxed (do NOT read sgmii_soc.sv / pcs_pma_flat.v)
 read_verilog -sv [list $D/arp_ctrl.sv $D/framing_top_sgmii.sv $D/eth_mac_1g.sv \
     $D/axis_gmii_rx.sv $D/axis_gmii_tx.sv $D/rgmii_lfsr.sv $D/dualmem_widen.sv $D/dualmem_widen8.sv \

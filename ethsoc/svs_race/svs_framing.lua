@@ -26,5 +26,5 @@ while k<=cnt do
   k=k+1
 end
 local net = svd.flatten_struct(result, "framing_top_sgmii")
-svd.write_netlist_edif(net, "/tmp/eb/hybrid4/framing_top_sgmii.edf")
-print("WROTE /tmp/eb/hybrid4/framing_top_sgmii.edf")
+svd.write_netlist_edif(net, (os.getenv("W") or "/tmp/svs_hybrid") .. "/framing_top_sgmii.edf")
+print("WROTE " .. (os.getenv("W") or "/tmp/svs_hybrid") .. "/framing_top_sgmii.edf")

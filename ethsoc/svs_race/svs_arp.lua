@@ -26,5 +26,5 @@ while k<=cnt do
   k=k+1
 end
 local net = svd.flatten_struct(result, "arp_ctrl__FM2199028187441_FI3232235876")
-svd.write_netlist_edif(net, "/tmp/eb/arpsim/arp_ctrl.edf")
-print("WROTE /tmp/eb/arpsim/arp_ctrl.edf")
+svd.write_netlist_edif(net, (os.getenv("W") or "/tmp/svs_hybrid") .. "/arp_ctrl.edf")
+print("WROTE " .. (os.getenv("W") or "/tmp/svs_hybrid") .. "/arp_ctrl.edf")

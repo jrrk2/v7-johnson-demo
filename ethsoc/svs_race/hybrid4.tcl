@@ -1,5 +1,5 @@
-set D /home/jonathan/v7-johnson-demo/ethsoc
-set H /tmp/eb/hybrid4
+set D [expr {[info exists ::env(ETH)] ? $::env(ETH) : "/home/jonathan/v7-johnson-demo/ethsoc"}]
+set H [expr {[info exists ::env(W)] ? $::env(W) : "/tmp/svs_hybrid"}]
 read_verilog -sv [list $D/arp_ctrl.sv]
 read_verilog [list $D/vc707_arp.v]
 read_verilog $H/framing_bb.v
