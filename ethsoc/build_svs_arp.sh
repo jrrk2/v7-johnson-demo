@@ -197,7 +197,7 @@ echo "=== 3. SVS place ==="
   TOPO_CONG_W=6 TOPO_CONG_CAP=8 TOPO_CONG_BIN=5 TOPO_LL_W=8 TOPO_LL_HCAP=5 TOPO_LL_VCAP=5 \
   TOPO_FEEDTHRU=18 TOPO_RELAY_MAXD=6 TOPO_BUF_TYPE=BUFR TOPO_BUFR_PER_REGION=0 \
   TOPO_BUFG_FANOUT=24 TOPO_BUFG_MAX=40 \
-  TOPO_CARRY_SPREAD=${SVS_SYNTH:+1} \
+  TOPO_CARRY_SPREAD=${SVS_SYNTH:+1} TOPO_CARRY_MAX_PER_COL=${TOPO_CARRY_MAX_PER_COL:-32} \
   TOPO_FIXNETS=$WORK/fixnets.txt TOPO_PLACE=sa TOPO_SEED=1 \
   BELS_OUT=$WORK/bels.txt TOPO_FT_JSON=$WORK/arp_ft.json \
   TOPO_STAMPED_JSON=$WORK/arp_stamped_ocaml.json PLACED_OUT=$WORK/placed.txt \
@@ -214,9 +214,14 @@ echo "=== 5. route (nextpnr router2) ==="
 # NEXTPNR_PIP_BLACKLIST_TILE: reserve individual INT pips whose prjxray segbit
 # collides with a silicon-validated IOB config bit in the shared IO/INT frame
 # column (a long-line mis-encoding; see the file + pip_blacklist_int_r_bounce).
+# --freq 125: the derived eth clocks (userclk2/rxuserclk = 125 MHz) have
+# synthesis-anonymous net names, so they can't be create_clock'd stably; a global
+# 125 MHz target makes the router timing-driven on the critical eth domain and
+# harmlessly over-constrains cpu_clk (50 MHz).  Default (12 MHz) hid a ~27 MHz
+# datapath.  from-source only (${SVS_SYNTH:+}) so the pinned golden is unchanged.
 $LOCK env NEXTPNR_ALLOW_CO_5FF_CONTENTION=1 NEXTPNR_SKIP_FAILED_ARCS=1 NEXTPNR_ARC_MAX_VISIT=400000 \
   NEXTPNR_PIP_BLACKLIST_TILE=$ETH/openflow/pip_blacklist_tile.txt \
-  $NEXTPNR --router router2 --chipdb $CHIPDB --xdc $ETH/r0_pins.xdc \
+  $NEXTPNR --router router2 --chipdb $CHIPDB --xdc $ETH/r0_pins.xdc ${SVS_SYNTH:+--freq 125} \
   --json $WORK/arp_stamped.json --fasm $WORK/arp.fasm --write $WORK/arp_routed.json 2>&1 \
   | tee $WORK/route.log \
   | grep --line-buffered -E "Info: (Packing|Placing|Placed|Running|Routing global|routing clock|SLICE|Max frequency)|iter=|ERROR|unbound" \
