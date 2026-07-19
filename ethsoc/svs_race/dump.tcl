@@ -25,7 +25,7 @@ dump_drivers /tmp/eb/drvdump/gold.txt
 puts "=== GOLD DUMPED ==="
 close_design
 # svs: link the emitted sgmii EDIF
-read_edif /tmp/eb/hybrid3/sgmii_soc.edf
+read_edif [expr {[info exists ::env(SGMII_EDIF)] ? $::env(SGMII_EDIF) : "/tmp/eb/hybrid3/sgmii_soc.edf"}]
 link_design -top sgmii_soc -part xc7vx485tffg1761-2
 dump_drivers /tmp/eb/drvdump/svs.txt i_pcs_pma_258__inst__
 puts "=== SVS DUMPED ==="
