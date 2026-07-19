@@ -205,7 +205,7 @@ echo "=== 3. SVS place ==="
   2>&1 | grep --line-buffered -E "FOM:|feedthroughs|carry-stamp|SA .*moves=|site physmap|mode=" ) ; : > $WORK/fixnets.txt
 
 echo "=== 4. carry-slice completion ==="
-CARRY_FLOORPLAN=$WORK/floorplan.json \
+CARRY_FLOORPLAN=$WORK/floorplan.json CARRY_STAMP_AVOID_CI=${SVS_SYNTH:+1} \
   python3 $SVS/carry_stamp.py $WORK/arp_ft.json $WORK/bels.txt $WORK/arp_stamped.json
 
 echo "=== 5. route (nextpnr router2) ==="
