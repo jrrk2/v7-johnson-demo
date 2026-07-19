@@ -110,7 +110,7 @@ TG_JSON        := $(TG_DIR)/top.json
 
 # ─── high-level targets ────────────────────────────────────────────────
 
-.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs-tools svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash svs_hybrids svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp svs_diag
+.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs-tools svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash flash-bpi svs_hybrids svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp svs_diag
 
 # Keep intermediates even if a recipe exits non-zero (the telegraph route
 # step does, on its skipped don't-care CARRY4.S arcs + timing miss; the calc
@@ -599,6 +599,23 @@ svs_hybrids: svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_
 # sticky/heartbeat LEDs -- vc707_sgmii_diag.v).  diag_gold.bit = all-Vivado
 # baseline; diag_svs.bit links the SVS sgmii_soc EDIF (needs svs_hybrid_sgmii
 # first, or SGMII_EDIF=/path).  Both land in build/diag/.
+# Non-volatile BPI flash programming (VC707) via Vivado hw_manager -- the
+# persistent path openFPGALoader's SPI `-f` can't reach on this board.
+# Generates the .mcs from BIT and programs the parallel NOR config flash.
+#   make flash-bpi BIT=build/svs_arp/svs_arp.bit      (any bitstream)
+#   make flash-bpi BIT=johnson/counter28.bit          (golden counter)
+# BOARD defaults vc707; needs a full Vivado + the board in JTAG mode.
+flash-bpi:
+	@[ -n "$(BIT)" ] || { echo "usage: make flash-bpi BIT=<path/to.bit>" >&2; exit 1; }
+	@[ -s "$(BIT)" ] || { echo "no bitstream at $(BIT)" >&2; exit 1; }
+	BIT='$(abspath $(BIT))' BOARD='$${BOARD:-vc707}' \
+	  $(VIVADO) -mode batch -source ethsoc/svs_race/flash_bpi.tcl
+
+# .mcs only (no board): bit -> mcs, useful to stage / inspect before programming.
+%.mcs: %.bit
+	BIT='$(abspath $<)' MCS='$(abspath $@)' $(VIVADO) -mode batch \
+	  -source ethsoc/svs_race/flash_bpi.tcl -tclargs mcs-only || true
+
 svs_diag:
 	@mkdir -p $(BUILD)/diag
 	W='$(BUILD)/diag' ETH='$(ETHSOC)' $(VIVADO) -mode batch \
