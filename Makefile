@@ -456,7 +456,18 @@ distclean: clean
 # result should still route + gate, just not bit-identically.
 SVS ?= $(HOME)/System-Verilog-suite
 SVS_PLACER := $(SVS)/_build/default/place_lef.exe
-SVS_ARP_BIT := /tmp/svs_arp.bit
+
+# ---------------------------------------------------------------------------
+# Build tree.  ALL SVS bit/fasm/frames + intermediates live under $(BUILD)
+# (gitignored), one subdir per target -- never /tmp.  Layout:
+#   build/svs_arp/          pinned silicon-validated open flow
+#   build/svs_arp_synth/    eth-arp from SVS synthesis (open backend)
+#   build/hybrid_<layer>/   golden shell + one SVS layer (Vivado)
+#   build/diag/             PCS status-observer bitstreams
+# each holds  <name>.bit  <name>.fasm  <name>.frames  + arp.json/.edf/logs.
+BUILD ?= $(CURDIR)/build
+SVS_ARP_WORK  := $(BUILD)/svs_arp
+SVS_ARP_BIT   := $(SVS_ARP_WORK)/svs_arp.bit
 # The eth-arp GT/SGMII config needs the AUTHORITATIVE prjxray DB (local
 # ground-truth fixes: GT frame addressing, ppip de-shadowing, CLBLM MC31),
 # not the pristine deps/prjxray fetch.  Override if yours lives elsewhere.
@@ -477,8 +488,9 @@ submodules-sync: | $(DEPS)/.initialised
 	 fi
 
 svs_arp: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
+	@mkdir -p $(SVS_ARP_WORK)
 	SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
-	  OUT='$(SVS_ARP_BIT)' bash ethsoc/build_svs_arp.sh
+	  WORK='$(SVS_ARP_WORK)' OUT='$(SVS_ARP_BIT)' bash ethsoc/build_svs_arp.sh
 	@echo "eth-arp open bit: $(SVS_ARP_BIT)  (flash: make svs_arp-flash; then arping 192.168.1.100)"
 
 svs_arp-flash: | $(OFL_BIN)
@@ -514,13 +526,14 @@ svs_arp-flash: | $(OFL_BIN)
 # SVS-emitted one lacks whatever nextpnr keys on.  Under investigation;
 # until resolved, svs_arp_synth-sta runs against a routable design via
 # STA_JSON/STA_FASM (below).
-SVS_ARP_SYNTH_BIT := /tmp/svs_arp_synth.bit
-SVS_ARP_SYNTH_WORK := /tmp/svs_arp_synth_build
+SVS_ARP_SYNTH_WORK := $(BUILD)/svs_arp_synth
+SVS_ARP_SYNTH_BIT  := $(SVS_ARP_SYNTH_WORK)/svs_arp_synth.bit
 OT_PERIOD_NS ?= 8.0
 SVS_SUITE_EXE := $(SVS)/_build/default/sv_suite.exe
 
 svs_arp_synth: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
 	@[ -x $(SVS_SUITE_EXE) ] || { echo "sv_suite.exe not built at $(SVS_SUITE_EXE) -- dune build in $(SVS)" >&2; exit 1; }
+	@mkdir -p $(SVS_ARP_SYNTH_WORK)
 	SVS_SYNTH=1 SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
 	  WORK='$(SVS_ARP_SYNTH_WORK)' OUT='$(SVS_ARP_SYNTH_BIT)' bash ethsoc/build_svs_arp.sh
 	@echo "SVS-synth open bit: $(SVS_ARP_SYNTH_BIT)  routed json: $(SVS_ARP_SYNTH_WORK)/arp_routed.json"
@@ -528,12 +541,14 @@ svs_arp_synth: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_
 # OpenTimer two-corner STA.  STA_JSON / STA_FASM select the design: default is
 # the SVS-synth routed output; if the synth route was blocked (see KNOWN
 # BLOCKER note above svs_arp_synth) point them at any placed+routed pair, e.g.
-#   make svs_arp_synth-sta STA_JSON=/tmp/svs_arp_build/arp_stamped.json \
-#                          STA_FASM=/tmp/svs_arp_build/arp.fasm
+#   make svs_arp_synth-sta STA_JSON=build/svs_arp/arp_stamped.json \
+#                          STA_FASM=build/svs_arp/arp.fasm
 # route2spef uses per-net Elmore from the routed json's ROUTING attrs, else a
 # flat FASM-census wire model (first-order; over-penalises long carry chains).
 STA_JSON ?= $(SVS_ARP_SYNTH_WORK)/arp_routed.json
 STA_FASM ?= $(SVS_ARP_SYNTH_WORK)/arp.fasm
+# (fall back to the pinned build's artifacts if the synth route was blocked:
+#  make svs_arp_synth-sta STA_JSON=$(SVS_ARP_WORK)/arp_stamped.json STA_FASM=$(SVS_ARP_WORK)/arp.fasm)
 svs_arp_synth-sta:
 	@[ -s $(STA_JSON) ] || { echo "no STA json ($(STA_JSON)) -- run 'make svs_arp_synth' or set STA_JSON=/path" >&2; exit 1; }
 	@[ -s $(STA_FASM) ] || { echo "no STA fasm ($(STA_FASM)) -- set STA_FASM=/path" >&2; exit 1; }
@@ -556,17 +571,18 @@ svs_arp_synth-flash: | $(OFL_BIN)
 #   svs_hybrid_framing    SVS framing_top in golden top+arp
 #   svs_hybrid_arp        SVS arp_ctrl    in golden eth stack
 # Needs a full Vivado (VIVADO=/path; default /opt/Xilinx/Vivado/2020.1).
-# Bit lands in $$W (default /tmp/svs_hybrid_<layer>); flash with
+# Bit lands in build/hybrid_<layer>/; flash with
 # svs_hybrid_<layer>-flash.
 VIVADO ?= /opt/Xilinx/Vivado/2020.1/bin/vivado
 ETHSOC ?= $(CURDIR)/ethsoc
 define SVS_HYBRID_RULE
 svs_hybrid_$(1):
 	@[ -x $(SVS_SUITE_EXE) ] || { echo "sv_suite.exe not built at $(SVS_SUITE_EXE)" >&2; exit 1; }
-	SVS='$(SVS)' VIVADO='$(VIVADO)' W='/tmp/svs_hybrid_$(1)' \
+	@mkdir -p $(BUILD)/hybrid_$(1)
+	SVS='$(SVS)' VIVADO='$(VIVADO)' W='$(BUILD)/hybrid_$(1)' \
 	  bash ethsoc/svs_race/build_hybrid.sh $(1)
 svs_hybrid_$(1)-flash: | $(OFL_BIN)
-	$(OFL_BIN) --cable digilent --freq 15000000 $$(ls /tmp/svs_hybrid_$(1)/*.bit | head -1)
+	$(OFL_BIN) --cable digilent --freq 15000000 $$(ls $(BUILD)/hybrid_$(1)/*.bit | head -1)
 endef
 $(foreach L,ethmacro sgmii framing arp,$(eval $(call SVS_HYBRID_RULE,$(L))))
 svs_hybrids: svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp
@@ -574,9 +590,10 @@ svs_hybrids: svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_
 # PCS status-observer diagnostic (sgmii_soc alone, TX idle; DIP-paged status/
 # sticky/heartbeat LEDs -- vc707_sgmii_diag.v).  diag_gold.bit = all-Vivado
 # baseline; diag_svs.bit links the SVS sgmii_soc EDIF (needs svs_hybrid_sgmii
-# first, or SGMII_EDIF=/path).  Both land in $$W (/tmp/svs_diag).
+# first, or SGMII_EDIF=/path).  Both land in build/diag/.
 svs_diag:
-	W='/tmp/svs_diag' ETH='$(ETHSOC)' $(VIVADO) -mode batch \
-	  -source ethsoc/svs_race/diag.tcl -journal /tmp/svs_diag/d.jou -log /tmp/svs_diag/d.log \
+	@mkdir -p $(BUILD)/diag
+	W='$(BUILD)/diag' ETH='$(ETHSOC)' $(VIVADO) -mode batch \
+	  -source ethsoc/svs_race/diag.tcl -journal $(BUILD)/diag/d.jou -log $(BUILD)/diag/d.log \
 	  || { echo "(diag_svs half needs svs_hybrid_sgmii or SGMII_EDIF=)"; }
-	@ls -l /tmp/svs_diag/*.bit 2>/dev/null
+	@ls -l $(BUILD)/diag/*.bit 2>/dev/null

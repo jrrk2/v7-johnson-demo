@@ -26,8 +26,8 @@ PART=xc7vx485tffg1761-2
 NEXTPNR=${NEXTPNR:-$ROOT/deps/nextpnr-xilinx/build-opt/nextpnr-xilinx}
 [ -x "$NEXTPNR" ] || NEXTPNR=$ROOT/deps/nextpnr-xilinx/build/nextpnr-xilinx
 CHIPDB=$ROOT/deps/nextpnr-xilinx/xilinx/xc7vx485t.bin
-WORK=${WORK:-/tmp/svs_arp_build}
-OUT=${OUT:-/tmp/svs_arp.bit}
+WORK=${WORK:-$ROOT/build/svs_arp}
+OUT=${OUT:-$WORK/svs_arp.bit}
 mkdir -p "$WORK"
 LOCK="flock /tmp/nextpnr.lock"; command -v flock >/dev/null || LOCK=""
 
@@ -39,12 +39,11 @@ echo "=== 1. netlist json ==="
 # P&R of THIS netlist is fresh territory -- gate on SKIPS=0 + hardware.
 if [ -n "${SVS_SYNTH:-}" ]; then
   echo "=== 1s. SVS synthesis (arp_open.lua) ==="
-  mkdir -p /tmp/svs_arp_synth_build
-  ( cd "$SVS" && MEMLOWER_FPGA=1 FPGA_LEC_NAMES=1 \
+  mkdir -p "$WORK"
+  ( cd "$SVS" && MEMLOWER_FPGA=1 FPGA_LEC_NAMES=1 W="$WORK" \
       ./_build/default/sv_suite.exe script $ETH/svs_race/arp_open.lua \
       > $WORK/svs_synth.log 2>&1 ) \
     || { echo "SVS SYNTH FAILED:"; tail -8 $WORK/svs_synth.log; exit 1; }
-  [ /tmp/svs_arp_synth_build/arp.json -ef $WORK/arp.json ] || cp /tmp/svs_arp_synth_build/arp.json $WORK/arp.json
   grep -aE 'WROTE|gate_map|PASS-THROUGH' $WORK/svs_synth.log | tail -3
 else
 # CANONICAL INPUT: the exact json the silicon-validated bit was placed and
@@ -86,7 +85,17 @@ for cn, c in cells.items():
         i = c["connections"].get("I", [None])[0]
         o = c["connections"].get("O", [None])[0]
         if isinstance(i, int) and i in port_bits and isinstance(o, int):
-            remap[o] = i
+            remap[o] = i          # IBUF.O -> port net (GT IPAD input pins)
+            drop.append(cn)
+    elif c.get("type") == "OBUF":
+        # GT serial OUTPUT pins (sgmii_txp/txn) are OPADs: the driver is
+        # inside the GT macro, so an OBUF binding OPAD_.../OUTBUF errors in
+        # nextpnr.  Merge the OBUF INPUT net into the port net and drop it
+        # (the GT drives the port directly, matching the Vivado netlist).
+        i = c["connections"].get("I", [None])[0]
+        o = c["connections"].get("O", [None])[0]
+        if isinstance(o, int) and o in port_bits and isinstance(i, int):
+            remap[i] = o
             drop.append(cn)
 for cn in drop:
     del cells[cn]

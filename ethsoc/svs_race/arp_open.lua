@@ -28,5 +28,5 @@ while k<=cnt do
   k=k+1
 end
 local net = svd.flatten_struct(result, "top")
-svd.write_nextpnr_json(net, "/tmp/svs_arp_synth_build/arp.json")
-print("WROTE /tmp/svs_arp_synth_build/arp.json")
+svd.write_nextpnr_json(net, (os.getenv("W") or "/tmp/svs_arp_synth_build") .. "/arp.json")
+print("WROTE " .. (os.getenv("W") or "/tmp/svs_arp_synth_build") .. "/arp.json")

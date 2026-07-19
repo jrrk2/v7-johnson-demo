@@ -17,7 +17,7 @@ ETH=${ETH:-$(cd "$HERE/.." && pwd)}
 SVS=${SVS:-$HOME/System-Verilog-suite}
 VIVADO=${VIVADO:-/opt/Xilinx/Vivado/2020.1/bin/vivado}
 LAYER=${1:?usage: build_hybrid.sh <ethmacro|sgmii|framing|arp>}
-W=${W:-/tmp/svs_hybrid_$LAYER}
+W=${W:-$ETH/../build/hybrid_$LAYER}
 mkdir -p "$W"
 
 case "$LAYER" in

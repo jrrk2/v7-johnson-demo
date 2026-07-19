@@ -74,3 +74,6 @@ firmware.elf
 **/*_calc.json
 *.fasm.s*
 ethsoc/ip/gen/
+
+# but keep the build-tree layout doc
+!build/README.md
