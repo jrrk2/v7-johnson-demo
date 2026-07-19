@@ -110,7 +110,7 @@ TG_JSON        := $(TG_DIR)/top.json
 
 # ─── high-level targets ────────────────────────────────────────────────
 
-.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash svs_hybrids svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp svs_diag
+.PHONY: all deps tools chipdb johnson.bit telegraph telegraph.bit flash telegraph-flash calc calc.bit calc-flash picosoc picosoc-flash clean distclean help svs-tools svs_arp svs_arp-flash svs_arp_synth svs_arp_synth-sta svs_arp_synth-timing svs_arp_synth-flash svs_hybrids svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_arp svs_diag
 
 # Keep intermediates even if a recipe exits non-zero (the telegraph route
 # step does, on its skipped don't-care CARRY4.S arcs + timing miss; the calc
@@ -454,8 +454,17 @@ distclean: clean
 # NOTE: the SA placement is deterministic for a given yosys json, but a
 # different yosys version can reorder cells and shift the placement; the
 # result should still route + gate, just not bit-identically.
-SVS ?= $(HOME)/System-Verilog-suite
+# System-Verilog-suite is vendored as a submodule (deps/System-Verilog-suite).
+# Override SVS=/path to use an external checkout instead.
+SVS ?= $(CURDIR)/deps/System-Verilog-suite
 SVS_PLACER := $(SVS)/_build/default/place_lef.exe
+
+# Build the SVS OCaml tools from the submodule (needs opam switch 5.3.0 + dune).
+# `make svs-tools` once after a fresh clone / submodule update.
+svs-tools: | $(SVS)/dune-project
+	@[ -f $(SVS)/dune-project ] || { echo "SVS submodule empty -- run: git submodule update --init deps/System-Verilog-suite" >&2; exit 1; }
+	cd $(SVS) && dune build ./_build/default/sv_suite.exe ./_build/default/place_lef.exe
+	@echo "SVS tools built: $(SVS_PLACER)"
 
 # ---------------------------------------------------------------------------
 # Build tree.  ALL SVS bit/fasm/frames + intermediates live under $(BUILD)
@@ -487,7 +496,7 @@ submodules-sync: | $(DEPS)/.initialised
 	   git submodule update --init --recursive; \
 	 fi
 
-svs_arp: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
+svs_arp: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) | svs-tools $(PRJXRAY_STAMP)
 	@mkdir -p $(SVS_ARP_WORK)
 	SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
 	  WORK='$(SVS_ARP_WORK)' OUT='$(SVS_ARP_BIT)' bash ethsoc/build_svs_arp.sh
@@ -531,7 +540,7 @@ SVS_ARP_SYNTH_BIT  := $(SVS_ARP_SYNTH_WORK)/svs_arp_synth.bit
 OT_PERIOD_NS ?= 8.0
 SVS_SUITE_EXE := $(SVS)/_build/default/sv_suite.exe
 
-svs_arp_synth: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) $(SVS_PLACER) | $(PRJXRAY_STAMP)
+svs_arp_synth: submodules-sync $(NEXTPNR_BIN) $(CHIPDB) $(FRAMES2BIT) $(PRJXRAY_DB_OK) | svs-tools $(PRJXRAY_STAMP)
 	@[ -x $(SVS_SUITE_EXE) ] || { echo "sv_suite.exe not built at $(SVS_SUITE_EXE) -- dune build in $(SVS)" >&2; exit 1; }
 	@mkdir -p $(SVS_ARP_SYNTH_WORK)
 	SVS_SYNTH=1 SVS='$(SVS)' YOSYS='$(YOSYS)' PRJXRAY='$(PRJXRAY_AUTH)' NEXTPNR='$(NEXTPNR_BIN)' \
@@ -576,8 +585,7 @@ svs_arp_synth-flash: | $(OFL_BIN)
 VIVADO ?= /opt/Xilinx/Vivado/2020.1/bin/vivado
 ETHSOC ?= $(CURDIR)/ethsoc
 define SVS_HYBRID_RULE
-svs_hybrid_$(1):
-	@[ -x $(SVS_SUITE_EXE) ] || { echo "sv_suite.exe not built at $(SVS_SUITE_EXE)" >&2; exit 1; }
+svs_hybrid_$(1): | svs-tools
 	@mkdir -p $(BUILD)/hybrid_$(1)
 	SVS='$(SVS)' VIVADO='$(VIVADO)' W='$(BUILD)/hybrid_$(1)' \
 	  bash ethsoc/svs_race/build_hybrid.sh $(1)
