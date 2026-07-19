@@ -1,0 +1,9 @@
+# Per-tile-instance pip reservations (NEXTPNR_PIP_BLACKLIST_TILE), format
+# TILENAME.DST.SRC.  These pips' prjxray segbits collide with a silicon-validated
+# IOB config bit in the shared INT frame column (IO piggybacks on the fabric
+# frame), and the pip is a LONG LINE -- already flagged as a mis-encoding suspect
+# (see NEXTPNR_NO_LONGLINES / pip_blacklist_int_r_bounce).  Avoid it at this tile.
+#
+# INT_L.LH12.LH0 bit 00_63 -> frame(0x1000,w70,b31) == LIOB18 STEPDOWN !00_127
+# collides with LIOB18_X81Y139.IOB_Y0.STEPDOWN (fasm2frames FasmInconsistentBits).
+INT_L_X32Y134.LH12.LH0

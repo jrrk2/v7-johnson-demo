@@ -211,7 +211,11 @@ CARRY_FLOORPLAN=$WORK/floorplan.json CARRY_STAMP_AVOID_CI=${SVS_SYNTH:+1} \
 echo "=== 5. route (nextpnr router2) ==="
 # Stream the router's phase/iteration lines (full transcript in route.log);
 # a silent 10-20 min route reads as a hang.
+# NEXTPNR_PIP_BLACKLIST_TILE: reserve individual INT pips whose prjxray segbit
+# collides with a silicon-validated IOB config bit in the shared IO/INT frame
+# column (a long-line mis-encoding; see the file + pip_blacklist_int_r_bounce).
 $LOCK env NEXTPNR_ALLOW_CO_5FF_CONTENTION=1 NEXTPNR_SKIP_FAILED_ARCS=1 NEXTPNR_ARC_MAX_VISIT=400000 \
+  NEXTPNR_PIP_BLACKLIST_TILE=$ETH/openflow/pip_blacklist_tile.txt \
   $NEXTPNR --router router2 --chipdb $CHIPDB --xdc $ETH/r0_pins.xdc \
   --json $WORK/arp_stamped.json --fasm $WORK/arp.fasm --write $WORK/arp_routed.json 2>&1 \
   | tee $WORK/route.log \
