@@ -605,10 +605,11 @@ svs_hybrids: svs_hybrid_ethmacro svs_hybrid_sgmii svs_hybrid_framing svs_hybrid_
 #   make flash-bpi BIT=build/svs_arp/svs_arp.bit      (any bitstream)
 #   make flash-bpi BIT=johnson/counter28.bit          (golden counter)
 # BOARD defaults vc707; needs a full Vivado + the board in JTAG mode.
+BOARD ?= vc707
 flash-bpi:
 	@[ -n "$(BIT)" ] || { echo "usage: make flash-bpi BIT=<path/to.bit>" >&2; exit 1; }
 	@[ -s "$(BIT)" ] || { echo "no bitstream at $(BIT)" >&2; exit 1; }
-	BIT='$(abspath $(BIT))' BOARD='$${BOARD:-vc707}' \
+	BIT='$(abspath $(BIT))' BOARD='$(BOARD)' \
 	  $(VIVADO) -mode batch -source ethsoc/svs_race/flash_bpi.tcl
 
 # .mcs only (no board): bit -> mcs, useful to stage / inspect before programming.

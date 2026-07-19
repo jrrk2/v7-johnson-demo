@@ -36,6 +36,15 @@ LOCK="flock /tmp/nextpnr.lock"; command -v flock >/dev/null || LOCK=""
 # nextpnr errors binding an IO buffer at OPAD/IPAD.  Merge each buffer's
 # fabric net into the port net and drop the cell.  Needed for ANY freshly
 # generated netlist (SVS synth or yosys); the pinned json is already clean.
+#
+# NOTE: GT pin DIRECTIONS and WIDTHS are no longer patched here.  SVS now reads
+# them from the primitive's Vivado unisim VHDL entity interface (secureip/ for
+# the GT macros) via lookup_xil_primitive_ports, so GTXE2 outputs (CPLLLOCK,
+# RXOUTCLK, ...) emit as outputs and narrow config pins (LOOPBACK[2:0]) get
+# their real width straight out of the emitter.  The emitter now BOMBS on any
+# unresolved primitive pin rather than guessing input, so a regression here is
+# loud, not a silent false combinatorial loop.
+
 strip_gt_pins() {
 python3 - "$1" <<'PY'
 import json, sys
@@ -149,8 +158,10 @@ if [ -n "${SVS_SYNTH:-}" ]; then
       > $WORK/svs_synth.log 2>&1 ) \
     || { echo "SVS SYNTH FAILED:"; tail -8 $WORK/svs_synth.log; exit 1; }
   grep -aE 'WROTE|gate_map|PASS-THROUGH' $WORK/svs_synth.log | tail -3
-  echo "=== 1s-b. strip GT-pin buffers (SVS synth) ==="
-  strip_gt_pins "$WORK/arp.json"
+  # No GT-pin post-processing on SVS output: bir_to_nextpnr_json now collapses
+  # the GT-serial identity-LUT chain (GTXTXP/GTXTXN -> sgmii_txp/txn) in the
+  # emitter (collapse_gt_serial), and SVS emits no IBUF/OBUF on the analog pads.
+  # strip_gt_pins is retained below only for the yosys netlist path.
 else
 # CANONICAL INPUT: the exact json the silicon-validated bit was placed and
 # routed from (net numbering determines the router's net order; a regenerated
@@ -186,6 +197,7 @@ echo "=== 3. SVS place ==="
   TOPO_CONG_W=6 TOPO_CONG_CAP=8 TOPO_CONG_BIN=5 TOPO_LL_W=8 TOPO_LL_HCAP=5 TOPO_LL_VCAP=5 \
   TOPO_FEEDTHRU=18 TOPO_RELAY_MAXD=6 TOPO_BUF_TYPE=BUFR TOPO_BUFR_PER_REGION=0 \
   TOPO_BUFG_FANOUT=24 TOPO_BUFG_MAX=40 \
+  TOPO_CARRY_SPREAD=${SVS_SYNTH:+1} \
   TOPO_FIXNETS=$WORK/fixnets.txt TOPO_PLACE=sa TOPO_SEED=1 \
   BELS_OUT=$WORK/bels.txt TOPO_FT_JSON=$WORK/arp_ft.json \
   TOPO_STAMPED_JSON=$WORK/arp_stamped_ocaml.json PLACED_OUT=$WORK/placed.txt \
