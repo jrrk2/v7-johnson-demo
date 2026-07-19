@@ -31,43 +31,13 @@ OUT=${OUT:-$WORK/svs_arp.bit}
 mkdir -p "$WORK"
 LOCK="flock /tmp/nextpnr.lock"; command -v flock >/dev/null || LOCK=""
 
-echo "=== 1. netlist json ==="
-# SVS_SYNTH=1: synthesize from RTL SOURCE with the SVS pipeline (verible
-# parse -> unroll/inline/iflift/blocking_subst/meminfer/memlower/srl_infer
-# -> gate_map wrappers + PCS passthrough -> flatten -> nextpnr json).
-# Silicon-validated frontend (15-bug campaign, 2026-07-18); the open
-# P&R of THIS netlist is fresh territory -- gate on SKIPS=0 + hardware.
-if [ -n "${SVS_SYNTH:-}" ]; then
-  echo "=== 1s. SVS synthesis (arp_open.lua) ==="
-  mkdir -p "$WORK"
-  ( cd "$SVS" && MEMLOWER_FPGA=1 FPGA_LEC_NAMES=1 W="$WORK" \
-      ./_build/default/sv_suite.exe script $ETH/svs_race/arp_open.lua \
-      > $WORK/svs_synth.log 2>&1 ) \
-    || { echo "SVS SYNTH FAILED:"; tail -8 $WORK/svs_synth.log; exit 1; }
-  grep -aE 'WROTE|gate_map|PASS-THROUGH' $WORK/svs_synth.log | tail -3
-else
-# CANONICAL INPUT: the exact json the silicon-validated bit was placed and
-# routed from (net numbering determines the router's net order; a regenerated
-# json routes DIFFERENTLY on the same placement, and nextpnr can land on a
-# route whose fasm encoding is broken with zero skipped arcs -- seen live:
-# make-built bit dead, 35k-line fasm delta, same placement).  Set
-# REGEN_NETLIST=1 to rebuild via yosys instead (then VERIFY via the gate).
-if [ -z "${REGEN_NETLIST:-}" ] && [ -s $ETH/vivado_arp.json.gz ]; then
-  gunzip -c $ETH/vivado_arp.json.gz > $WORK/arp.json
-  echo "using pinned ethsoc/vivado_arp.json.gz"
-else
-echo "=== 1a. netlist -> json (yosys) ==="
-( cd $ETH && $YOSYS -p "script viv2json.ys" -p "write_json $WORK/arp.json" \
-    > $WORK/yosys.log 2>&1 ) || { tail -5 $WORK/yosys.log; exit 1; }
-[ -s $WORK/arp.json ]
-
-echo "=== 1b. strip GT-pin IBUFs ==="
-# Vivado's netlist puts plain IBUFs on the GT analog pins (sgmii_refclk_p/n,
-# sgmii_rxp/n).  Those pins are IPADs -- the real input buffer is inside the
-# GT macro -- and nextpnr errors binding an IBUF there ("No Bel named
-# IPAD_X2Y8/IOB33/INBUF_EN").  Bypass: merge each such IBUF's output net into
-# its port net and drop the cell (matches the silicon-validated netlist).
-python3 - "$WORK/arp.json" <<'PY'
+# Strip GT analog-pin buffers (IBUF on sgmii_rxp/refclk IPADs, OBUF on
+# sgmii_txp/txn OPADs): the real buffers live inside the GT macro, so
+# nextpnr errors binding an IO buffer at OPAD/IPAD.  Merge each buffer's
+# fabric net into the port net and drop the cell.  Needed for ANY freshly
+# generated netlist (SVS synth or yosys); the pinned json is already clean.
+strip_gt_pins() {
+python3 - "$1" <<'PY'
 import json, sys
 p = sys.argv[1]
 j = json.load(open(p))
@@ -97,20 +67,112 @@ for cn, c in cells.items():
         if isinstance(o, int) and o in port_bits and isinstance(i, int):
             remap[i] = o
             drop.append(cn)
+# SVS flatten emits a chain of identity LUT6 pass-through buffers (one per
+# hierarchy level) between the GT's GTXTXP/GTXTXN serial output and the
+# sgmii_txp/txn ports.  nextpnr then auto-inserts an OBUF on the fabric-driven
+# port and binds it to the GT serial OPAD -> "No Bel OPAD/.../OUTBUF".  The
+# EDIF emitter's ident-obuf bypass collapses these; the nextpnr-json one does
+# not.  Collapse the identity-LUT6 chain here so the GT output drives the port
+# directly (nextpnr's constrain_gt then binds GTXTXP->OPAD, no fabric buffer).
+def is_ident_lut(c):
+    if c.get("type") != "LUT6":
+        return False
+    init = c.get("parameters", {}).get("INIT", "")
+    # identity LUT6: O = I0  (INIT = 0xFFFFFFFF00000000, MSB-first all-1 hi
+    # half / all-0 lo half) with every input tied to the same net.
+    if init.count("1") != 32 or init.count("0") != 32:
+        return False
+    ins = [c["connections"].get(f"I{k}", [None])[0] for k in range(6)]
+    return len(set(ins)) == 1 and isinstance(ins[0], int)
+# net -> the (single) identity-LUT cell that drives it
+lut_drv = {}
+for cn, c in cells.items():
+    if is_ident_lut(c):
+        o = c["connections"].get("O", [None])[0]
+        if isinstance(o, int):
+            lut_drv[o] = cn
+lut_dropped = 0
+for pn, pd in ports.items():
+    if not pn.startswith("sgmii_") or pd.get("direction") != "output":
+        continue
+    for b in pd.get("bits", []):
+        if not isinstance(b, int):
+            continue
+        # walk the identity-LUT chain from the port bit to its real source
+        cur, chain = b, []
+        while cur in lut_drv and lut_drv[cur] not in chain:
+            cn = lut_drv[cur]
+            chain.append(cn)
+            cur = cells[cn]["connections"]["I0"][0]
+        if chain:
+            remap[cur] = b            # GT serial output net -> the port bit
+            for cn in chain:
+                if cn not in drop:
+                    drop.append(cn); lut_dropped += 1
 for cn in drop:
-    del cells[cn]
+    cells.pop(cn, None)
+# resolve remap transitively (chains of aliases)
+def resolve(x):
+    seen = set()
+    while x in remap and x not in seen:
+        seen.add(x); x = remap[x]
+    return x
 def rewrite(bits):
-    return [remap.get(b, b) if isinstance(b, int) else b for b in bits]
+    return [resolve(b) if isinstance(b, int) else b for b in bits]
 for c in cells.values():
     for pn2, bl in c.get("connections", {}).items():
         c["connections"][pn2] = rewrite(bl)
 for e in mod.get("netnames", {}).values():
     e["bits"] = rewrite(e.get("bits", []))
 json.dump(j, open(p, "w"))
-print(f"stripped {len(drop)} GT-pin IBUFs: {sorted(drop)}")
+print(f"stripped {len(drop)-lut_dropped} GT-pin buffers + "
+      f"{lut_dropped} GT-serial identity LUTs: {sorted(drop)[:6]}...")
 PY
+}
+
+echo "=== 1. netlist json ==="
+# SVS_SYNTH=1: synthesize from RTL SOURCE with the SVS pipeline (verible
+# parse -> unroll/inline/iflift/blocking_subst/meminfer/memlower/srl_infer
+# -> gate_map wrappers + PCS passthrough -> flatten -> nextpnr json).
+# Silicon-validated frontend (15-bug campaign, 2026-07-18); the open
+# P&R of THIS netlist is fresh territory -- gate on SKIPS=0 + hardware.
+if [ -n "${SVS_SYNTH:-}" ]; then
+  echo "=== 1s. SVS synthesis (arp_open.lua) ==="
+  mkdir -p "$WORK"
+  # NEXTPNR_JSON_CONST_STRINGS=1: emit constants as yosys-style "0"/"1" bits
+  # (-> GLOBAL_LOGIC0/1) rather than $PACKER_GND/VCC nets.  nextpnr's GT packer
+  # requires the GT clock-select pins (CPLLREFCLKSEL etc.) be driven by
+  # GLOBAL_LOGIC or a clock source; the packer-net form makes it reject them
+  # as "driven by IOB18_OUTBUF_DCIEN".
+  ( cd "$SVS" && MEMLOWER_FPGA=1 FPGA_LEC_NAMES=1 NEXTPNR_JSON_CONST_STRINGS=1 W="$WORK" \
+      ./_build/default/sv_suite.exe script $ETH/svs_race/arp_open.lua \
+      > $WORK/svs_synth.log 2>&1 ) \
+    || { echo "SVS SYNTH FAILED:"; tail -8 $WORK/svs_synth.log; exit 1; }
+  grep -aE 'WROTE|gate_map|PASS-THROUGH' $WORK/svs_synth.log | tail -3
+  echo "=== 1s-b. strip GT-pin buffers (SVS synth) ==="
+  strip_gt_pins "$WORK/arp.json"
+else
+# CANONICAL INPUT: the exact json the silicon-validated bit was placed and
+# routed from (net numbering determines the router's net order; a regenerated
+# json routes DIFFERENTLY on the same placement, and nextpnr can land on a
+# route whose fasm encoding is broken with zero skipped arcs -- seen live:
+# make-built bit dead, 35k-line fasm delta, same placement).  Set
+# REGEN_NETLIST=1 to rebuild via yosys instead (then VERIFY via the gate).
+if [ -z "${REGEN_NETLIST:-}" ] && [ -s $ETH/vivado_arp.json.gz ]; then
+  gunzip -c $ETH/vivado_arp.json.gz > $WORK/arp.json
+  echo "using pinned ethsoc/vivado_arp.json.gz"
+else
+echo "=== 1a. netlist -> json (yosys) ==="
+( cd $ETH && $YOSYS -p "script viv2json.ys" -p "write_json $WORK/arp.json" \
+    > $WORK/yosys.log 2>&1 ) || { tail -5 $WORK/yosys.log; exit 1; }
+[ -s $WORK/arp.json ]
+
+echo "=== 1b. strip GT-pin IBUFs ==="
+strip_gt_pins "$WORK/arp.json"
 fi
 fi
+
+# never reached (structural placeholder for the old inline block below)
 
 echo "=== 2. floorplan (prjxray tilegrid) ==="
 PRJXRAY_TILEGRID=$PXDB/xc7vx485t/tilegrid.json \
